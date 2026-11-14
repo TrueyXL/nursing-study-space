@@ -1,0 +1,1315 @@
+<title>Nursing Study Space</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&family=Outfit:wght@500;600;700&display=swap">
+<style>
+/* Layout: calm two-pane app — sidebar on desktop, bottom tab bar on phone. One soft surface per section, no heavy chrome. */
+:root{
+  --bg:#FCEEF2; --surface:#FFFFFF; --surface2:#F8E3EA; --fg:#3A2730; --muted:#866874; --line:#EFD5DE;
+  --accent:#B9426F; --accent-ink:#FFFFFF; --soft:#F7D6E2; --ok:#2E7D5B; --warn:#B26A00; --bad:#B3261E;
+  --display:"Outfit",ui-sans-serif,system-ui,sans-serif; --body:"Figtree",ui-sans-serif,system-ui,-apple-system,sans-serif;
+  --r:14px; --shadow:0 1px 2px rgba(60,20,40,.05),0 6px 20px rgba(60,20,40,.05);
+}
+:root[data-palette="navy"]{--bg:#EDF2F8;--surface:#FFFFFF;--surface2:#E0E8F2;--fg:#1C2939;--muted:#5D6F84;--line:#D4DEEA;--accent:#2A5592;--soft:#D3E0F1}
+:root[data-palette="forest"]{--bg:#EEF3EE;--surface:#FFFFFF;--surface2:#E0EAE2;--fg:#1F2D24;--muted:#5F7265;--line:#D4E1D7;--accent:#2E6747;--soft:#D3E6D9}
+:root[data-palette="charcoal"]{--bg:#EFF0F1;--surface:#FFFFFF;--surface2:#E3E5E8;--fg:#202328;--muted:#646A73;--line:#D8DBDF;--accent:#3C4654;--soft:#DADEE4}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){--bg:#1E1619;--surface:#2A1F24;--surface2:#33262C;--fg:#F5E6EC;--muted:#BFA2AE;--line:#43323A;--accent:#F08BB3;--accent-ink:#2A121C;--soft:#4A2B39;--ok:#7BD3A6;--warn:#F2B661;--bad:#FF8A80;color-scheme:dark}
+  :root:not([data-theme="light"])[data-palette="navy"]{--bg:#131A23;--surface:#1B2430;--surface2:#222D3B;--fg:#E5ECF5;--muted:#9AABC0;--line:#2E3A4A;--accent:#8DB4EC;--accent-ink:#0F1B2C;--soft:#253A57}
+  :root:not([data-theme="light"])[data-palette="forest"]{--bg:#141A16;--surface:#1C241F;--surface2:#232D27;--fg:#E3EEE6;--muted:#9DB2A3;--line:#2E3B33;--accent:#86C9A2;--accent-ink:#0F2017;--soft:#24402F}
+  :root:not([data-theme="light"])[data-palette="charcoal"]{--bg:#16171A;--surface:#1F2125;--surface2:#272A2F;--fg:#E8EAED;--muted:#A2A8B1;--line:#33363C;--accent:#B9C3D1;--accent-ink:#16181C;--soft:#343A44}
+}
+:root[data-theme="dark"]{--bg:#1E1619;--surface:#2A1F24;--surface2:#33262C;--fg:#F5E6EC;--muted:#BFA2AE;--line:#43323A;--accent:#F08BB3;--accent-ink:#2A121C;--soft:#4A2B39;--ok:#7BD3A6;--warn:#F2B661;--bad:#FF8A80;color-scheme:dark}
+:root[data-theme="dark"][data-palette="navy"]{--bg:#131A23;--surface:#1B2430;--surface2:#222D3B;--fg:#E5ECF5;--muted:#9AABC0;--line:#2E3A4A;--accent:#8DB4EC;--accent-ink:#0F1B2C;--soft:#253A57}
+:root[data-theme="dark"][data-palette="forest"]{--bg:#141A16;--surface:#1C241F;--surface2:#232D27;--fg:#E3EEE6;--muted:#9DB2A3;--line:#2E3B33;--accent:#86C9A2;--accent-ink:#0F2017;--soft:#24402F}
+:root[data-theme="dark"][data-palette="charcoal"]{--bg:#16171A;--surface:#1F2125;--surface2:#272A2F;--fg:#E8EAED;--muted:#A2A8B1;--line:#33363C;--accent:#B9C3D1;--accent-ink:#16181C;--soft:#343A44}
+
+*{box-sizing:border-box}
+html,body{height:100%}
+body{background:var(--bg);color:var(--fg);font:16px/1.55 var(--body);-webkit-font-smoothing:antialiased}
+h1,h2,h3{font-family:var(--display);font-weight:600;line-height:1.2;text-wrap:balance;margin:0}
+h1{font-size:1.75rem} h2{font-size:1.2rem} h3{font-size:1rem}
+p{margin:0}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+a{color:var(--accent)}
+.muted{color:var(--muted)} .small{font-size:.875rem} .tiny{font-size:.78rem}
+.label{font-size:.75rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600}
+
+/* shell */
+.app{display:grid;grid-template-columns:236px minmax(0,1fr);min-height:100%}
+.side{position:sticky;top:env(safe-area-inset-top,0px);height:100vh;padding:22px 14px;padding-left:max(14px,env(safe-area-inset-left,0px));display:flex;flex-direction:column;gap:18px;border-right:1px solid var(--line)}
+.brand{display:flex;align-items:center;gap:10px;padding:0 8px}
+.brand-mark{width:34px;height:34px;border-radius:10px;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center;font-family:var(--display);font-weight:700}
+.brand b{font-family:var(--display);font-size:1.05rem;display:block;line-height:1.1}
+.nav{display:flex;flex-direction:column;gap:2px}
+.nav a{display:flex;align-items:center;gap:12px;padding:9px 10px;border-radius:10px;color:var(--fg);text-decoration:none;font-weight:500}
+.nav a:hover{background:var(--surface2)}
+.nav a[aria-current="page"]{background:var(--soft);color:var(--fg);font-weight:600}
+.nav svg{width:20px;height:20px;flex:none;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.side-foot{margin-top:auto;display:flex;flex-direction:column;gap:10px;padding:0 8px}
+main{min-width:0;padding-block:28px 40px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.wrap{max-width:1020px;margin:0 auto;display:flex;flex-direction:column;gap:22px}
+.head{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap}
+.head p{margin-top:4px}
+
+.tabbar{display:none}
+.sheet-bg{position:fixed;inset:0;background:rgba(0,0,0,.28);z-index:40}
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:41;background:var(--surface);border-radius:20px 20px 0 0;padding:18px max(16px,env(safe-area-inset-right,0px)) calc(18px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));display:flex;flex-direction:column;gap:14px;box-shadow:0 -10px 30px rgba(0,0,0,.12)}
+.sheet .nav a{padding:12px}
+
+@media (max-width:820px){
+  .app{grid-template-columns:minmax(0,1fr)}
+  .side{display:none}
+  main{padding-block:18px calc(92px + env(safe-area-inset-bottom,0px))}
+  .tabbar{display:grid;grid-template-columns:repeat(5,1fr);position:fixed;left:0;right:0;bottom:0;z-index:30;background:var(--surface);border-top:1px solid var(--line);padding:6px max(6px,env(safe-area-inset-right,0px)) calc(6px + env(safe-area-inset-bottom,0px)) max(6px,env(safe-area-inset-left,0px))}
+  .tabbar a,.tabbar button{display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 2px;font-size:.72rem;color:var(--muted);text-decoration:none;background:none;border:0;border-radius:10px;font-weight:600}
+  .tabbar [aria-current="page"]{color:var(--accent)}
+  .tabbar svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+  h1{font-size:1.45rem}
+}
+
+/* building blocks */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:18px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.grid{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr))}
+.grid-2{display:grid;gap:16px;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr)}
+@media (max-width:900px){.grid-2{grid-template-columns:minmax(0,1fr)}}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.row.between{justify-content:space-between}
+.stack{display:flex;flex-direction:column;gap:10px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:1px solid var(--line);background:var(--surface);padding:9px 14px;border-radius:999px;font-weight:600;cursor:pointer;min-height:40px;text-decoration:none;color:var(--fg)}
+.btn:hover{background:var(--surface2)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.primary:hover{filter:brightness(1.06)}
+.btn.ghost{border-color:transparent;background:transparent}
+.btn.sm{padding:5px 11px;min-height:32px;font-size:.875rem}
+.btn.danger{color:var(--bad)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+input[type=text],input[type=date],input[type=number],input[type=search],select,textarea{width:100%;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 12px;min-height:42px}
+textarea{resize:vertical;min-height:90px;line-height:1.5}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--soft);border-color:var(--accent)}
+label.f{display:flex;flex-direction:column;gap:5px;font-size:.85rem;font-weight:600;color:var(--muted);min-width:0;flex:1}
+.form-row{display:flex;gap:10px;flex-wrap:wrap}
+.form-row>*{flex:1 1 150px}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:999px;background:var(--surface2);font-size:.8rem;font-weight:600;white-space:nowrap}
+.chip.accent{background:var(--soft)}
+.chip.exam{background:color-mix(in srgb,var(--bad) 14%,transparent);color:var(--bad)}
+.chip.clinical{background:color-mix(in srgb,var(--ok) 15%,transparent);color:var(--ok)}
+.chip.assignment{background:color-mix(in srgb,var(--warn) 16%,transparent);color:var(--warn)}
+.pills{display:flex;gap:6px;flex-wrap:wrap}
+.pill{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:6px 13px;font-weight:600;font-size:.875rem;cursor:pointer}
+.pill[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.list{display:flex;flex-direction:column}
+.li{display:flex;gap:12px;align-items:center;padding:11px 0;border-bottom:1px solid var(--line);min-width:0}
+.li:last-child{border-bottom:0}
+.li .grow{flex:1;min-width:0}
+.li .t{font-weight:600;overflow-wrap:anywhere}
+.check{width:22px;height:22px;border-radius:7px;border:2px solid var(--line);background:var(--surface);flex:none;cursor:pointer;display:grid;place-items:center;padding:0}
+.check[aria-checked="true"]{background:var(--accent);border-color:var(--accent)}
+.check[aria-checked="true"]::after{content:"";width:9px;height:5px;border:2px solid var(--accent-ink);border-top:0;border-right:0;transform:rotate(-45deg) translate(1px,-1px)}
+.done .t{text-decoration:line-through;color:var(--muted)}
+.empty{padding:22px;border:1.5px dashed var(--line);border-radius:var(--r);text-align:center;color:var(--muted);display:flex;flex-direction:column;gap:10px;align-items:center}
+.stat{font-family:var(--display);font-size:1.9rem;font-weight:600;line-height:1;font-variant-numeric:tabular-nums}
+.banner{padding:10px 14px;border-radius:12px;background:var(--surface2);font-size:.875rem;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.iconbtn{width:36px;height:36px;border-radius:10px;border:0;background:transparent;display:grid;place-items:center;cursor:pointer;color:var(--muted);flex:none}
+.iconbtn:hover{background:var(--surface2);color:var(--fg)}
+.iconbtn svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+
+/* theme swatches */
+.swatches{display:flex;gap:8px;flex-wrap:wrap}
+.sw{width:30px;height:30px;border-radius:50%;border:2px solid var(--surface);box-shadow:0 0 0 1px var(--line);cursor:pointer;padding:0}
+.sw[aria-pressed="true"]{box-shadow:0 0 0 2px var(--fg)}
+
+/* assistant */
+.chat{display:flex;flex-direction:column;gap:14px;min-height:320px}
+.msg{max-width:100%;padding:12px 15px;border-radius:14px;line-height:1.6;min-width:0;overflow-wrap:anywhere}
+.msg.u{align-self:flex-end;background:var(--soft);max-width:85%;white-space:pre-wrap}
+.msg.a{align-self:stretch;background:var(--surface);border:1px solid var(--line)}
+.msg.a h1,.msg.a h2,.msg.a h3{font-size:1.02rem;margin:10px 0 4px}
+.msg.a p{margin:6px 0} .msg.a ul,.msg.a ol{margin:6px 0;padding-left:22px}
+.msg.a table{border-collapse:collapse;font-size:.9rem;margin:8px 0}
+.msg.a th,.msg.a td{border:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}
+.msg.a code{background:var(--surface2);padding:1px 5px;border-radius:5px;font-size:.9em}
+.tbl{overflow-x:auto;max-width:100%}
+.composer{position:sticky;bottom:0;background:var(--bg);padding-top:8px;display:flex;flex-direction:column;gap:8px}
+@media (max-width:820px){.composer{bottom:calc(70px + env(safe-area-inset-bottom,0px))}}
+.composer-box{display:flex;gap:8px;align-items:flex-end;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:8px}
+.composer-box textarea{border:0;min-height:44px;max-height:200px;padding:8px;background:transparent}
+.composer-box textarea:focus{outline:0}
+.prompt-cats{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;scrollbar-width:thin}
+.prompt-cats .pill{flex:none}
+.prompts{display:grid;gap:8px;grid-template-columns:repeat(auto-fill,minmax(min(100%,240px),1fr))}
+.prompt{text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:11px 13px;cursor:pointer;font-size:.9rem;line-height:1.4}
+.prompt:hover{border-color:var(--accent)}
+.prompt b{display:block;font-size:.92rem;margin-bottom:2px}
+.attach{display:flex;gap:6px;flex-wrap:wrap}
+.thumb{position:relative;width:54px;height:54px;border-radius:9px;overflow:hidden;border:1px solid var(--line)}
+.thumb img{width:100%;height:100%;object-fit:cover}
+.thumb button{position:absolute;top:2px;right:2px;width:20px;height:20px;border-radius:50%;border:0;background:rgba(0,0,0,.6);color:#fff;font-size:12px;line-height:1;cursor:pointer}
+
+/* flashcards */
+.flash{perspective:1200px;min-height:230px;cursor:pointer}
+.flash-in{position:relative;min-height:230px;transition:transform .45s ease;transform-style:preserve-3d}
+.flash.flip .flash-in{transform:rotateY(180deg)}
+.face{position:absolute;inset:0;backface-visibility:hidden;background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:26px;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;gap:10px;font-size:1.15rem;overflow:auto;overflow-wrap:anywhere}
+.face.back{transform:rotateY(180deg);background:var(--surface2)}
+@media (prefers-reduced-motion:reduce){.flash-in{transition:none}}
+.boxes{display:flex;gap:4px}
+.boxes i{width:16px;height:6px;border-radius:3px;background:var(--line)}
+.boxes i.on{background:var(--accent)}
+
+/* files */
+.drop{border:2px dashed var(--line);border-radius:var(--r);padding:26px;text-align:center;display:flex;flex-direction:column;gap:8px;align-items:center;background:var(--surface)}
+.drop.over{border-color:var(--accent);background:var(--soft)}
+.ficon{width:42px;height:42px;border-radius:10px;background:var(--surface2);display:grid;place-items:center;font-size:.7rem;font-weight:700;color:var(--muted);flex:none;overflow:hidden;text-transform:uppercase}
+.ficon img{width:100%;height:100%;object-fit:cover}
+
+/* toolkit */
+.ref-table{width:100%;border-collapse:collapse;font-size:.92rem}
+.ref-table th,.ref-table td{text-align:left;padding:8px 6px;border-bottom:1px solid var(--line);vertical-align:top}
+.ref-table td:nth-child(2){font-variant-numeric:tabular-nums;white-space:nowrap}
+.calc-out{font-family:var(--display);font-size:1.5rem;font-weight:600;font-variant-numeric:tabular-nums}
+details.card>summary{cursor:pointer;font-family:var(--display);font-weight:600;font-size:1.05rem;list-style:none;display:flex;justify-content:space-between;align-items:center}
+details.card>summary::after{content:"+";font-size:1.3rem;color:var(--muted)}
+details.card[open]>summary::after{content:"–"}
+
+/* focus timer */
+.ring{width:220px;height:220px;max-width:100%;margin:0 auto;position:relative}
+.ring svg{width:100%;height:100%;transform:rotate(-90deg)}
+.ring .time{position:absolute;inset:0;display:grid;place-items:center;font-family:var(--display);font-size:2.6rem;font-weight:600;font-variant-numeric:tabular-nums}
+.bars{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;align-items:end;height:130px}
+.bar{display:flex;flex-direction:column;align-items:center;gap:4px;height:100%;justify-content:flex-end}
+.bar i{width:100%;max-width:34px;border-radius:6px 6px 2px 2px;background:var(--accent);min-height:3px}
+.bar.today i{background:var(--fg)}
+.bar span{font-size:.72rem;color:var(--muted);font-variant-numeric:tabular-nums}
+
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(24px + env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:999px;font-weight:600;font-size:.9rem;z-index:60;max-width:calc(100% - 32px)}
+@media (max-width:820px){.toast{bottom:calc(84px + env(safe-area-inset-bottom,0px))}}
+.spin{width:16px;height:16px;border-radius:50%;border:2px solid var(--line);border-top-color:var(--accent);animation:sp 1s linear infinite;display:inline-block}
+@keyframes sp{to{transform:rotate(360deg)}}
+.note-editor textarea{min-height:320px}
+.inline-confirm{display:flex;gap:6px;align-items:center;font-size:.85rem}
+
+/* exams */
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+fieldset.card{margin:0;min-width:0}
+.mode-grid{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr))}
+.mode{text-align:left;background:var(--surface2);border:1px solid var(--line);border-radius:12px;padding:14px;cursor:pointer;display:flex;flex-direction:column;gap:3px}
+.mode:hover{border-color:var(--accent)}
+.mode b{font-family:var(--display);font-size:1.02rem}
+.exam-progress{position:sticky;top:0;z-index:5;background:var(--bg);padding:8px 0;display:flex;gap:12px;align-items:center}
+.bar-track{flex:1;height:8px;border-radius:4px;background:var(--surface2);overflow:hidden}
+.bar-track i{display:block;height:100%;background:var(--accent);border-radius:4px;transition:width .25s}
+.qnum{font-family:var(--display);font-weight:600;color:var(--accent)}
+.qtext{font-weight:600;font-size:1.02rem}
+.opts{display:flex;flex-direction:column;gap:8px}
+.opt{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border:1px solid var(--line);border-radius:12px;cursor:pointer;line-height:1.45}
+label.opt:hover{border-color:var(--accent)}
+.opt input{position:absolute;opacity:0;pointer-events:none}
+.opt .ol{flex:none;width:26px;height:26px;border-radius:50%;border:1.5px solid var(--line);display:grid;place-items:center;font-weight:700;font-size:.8rem;color:var(--muted)}
+.opt:has(input:checked){border-color:var(--accent);background:var(--soft)}
+.opt:has(input:checked) .ol{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.opt:has(input:focus-visible){outline:2px solid var(--accent);outline-offset:2px}
+.opt .tag{margin-left:auto;flex:none;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em}
+.opt.is-key{border-color:var(--ok);background:color-mix(in srgb,var(--ok) 10%,transparent)}
+.opt.is-key .ol{background:var(--ok);border-color:var(--ok);color:#fff} .opt.is-key .tag{color:var(--ok)}
+.opt.is-wrong{border-color:var(--bad);background:color-mix(in srgb,var(--bad) 9%,transparent)}
+.opt.is-wrong .ol{border-color:var(--bad);color:var(--bad)} .opt.is-wrong .tag{color:var(--bad)}
+.q.review{border-left:4px solid var(--line)}
+.q.review.right{border-left-color:var(--ok)} .q.review.part{border-left-color:var(--warn)} .q.review.wrong{border-left-color:var(--bad)}
+.verdict{font-size:.8rem;font-weight:700;color:var(--muted)}
+.right .verdict{color:var(--ok)} .part .verdict{color:var(--warn)} .wrong .verdict{color:var(--bad)}
+.key,.yours{padding:10px 12px;border-radius:10px;background:var(--surface2);display:flex;flex-direction:column;gap:4px}
+.key{background:color-mix(in srgb,var(--ok) 9%,var(--surface))}
+.yours p{white-space:pre-wrap;overflow-wrap:anywhere}
+.submit-bar{position:sticky;bottom:12px;box-shadow:var(--shadow)}
+@media (max-width:820px){.submit-bar{bottom:calc(80px + env(safe-area-inset-bottom,0px))}}
+.case{padding:14px 16px;border-radius:var(--r);background:var(--soft);display:flex;flex-direction:column;gap:6px;border-left:4px solid var(--accent)}
+.case p{line-height:1.55}
+.opt.multi .ol{border-radius:7px}
+.opt.multi:has(input:checked) .ol::after{content:"✓";position:absolute}
+.opt.multi:has(input:checked) .ol{color:transparent;position:relative}
+.opt.multi:has(input:checked) .ol::after{color:var(--accent-ink)}
+.cheat{gap:16px}
+.cheat-q{display:flex;gap:12px;padding-bottom:14px;border-bottom:1px solid var(--line)}
+.cheat-q:last-child{border-bottom:0;padding-bottom:0}
+.cheat-q .qnum{flex:none;width:28px}
+.cheat-ans{margin:0;padding-left:18px;color:var(--ok);font-weight:600}
+.cheat .case{margin-top:4px}
+.score-ring{--c:var(--accent);width:92px;height:92px;flex:none;border-radius:50%;background:conic-gradient(var(--c) calc(var(--p)*1%),var(--surface2) 0);display:grid;place-items:center}
+.score-ring span{width:72px;height:72px;border-radius:50%;background:var(--surface);display:grid;place-items:center;font-family:var(--display);font-weight:600;font-size:1.3rem}
+.score-ring.ok{--c:var(--ok)} .score-ring.mid{--c:var(--warn)} .score-ring.low{--c:var(--bad)}
+.score-dot{flex:none;min-width:52px;text-align:center;padding:4px 8px;border-radius:999px;font-weight:700;font-size:.85rem;font-variant-numeric:tabular-nums}
+.score-dot.ok{background:color-mix(in srgb,var(--ok) 15%,transparent);color:var(--ok)}
+.score-dot.mid{background:color-mix(in srgb,var(--warn) 16%,transparent);color:var(--warn)}
+.score-dot.low{background:color-mix(in srgb,var(--bad) 14%,transparent);color:var(--bad)}
+</style>
+
+<div class="app">
+  <aside class="side" aria-label="Main">
+    <div class="brand"><div class="brand-mark">N</div><div><b>Study Space</b><span class="tiny muted">NUR 323/623</span></div></div>
+    <nav class="nav" id="nav-side"></nav>
+    <div class="side-foot">
+      <span class="label">Colour</span>
+      <div class="swatches" id="sw-side"></div>
+      <span class="tiny muted" id="sync-side"></span>
+    </div>
+  </aside>
+  <main><div class="wrap" id="view"></div></main>
+</div>
+<nav class="tabbar" id="tabbar" aria-label="Main"></nav>
+<div id="sheet" hidden></div>
+<div class="toast" id="toast" hidden></div>
+<input type="file" id="file-pick" multiple hidden>
+<input type="file" id="img-pick" accept="image/*" multiple hidden>
+
+<script>
+(() => {
+"use strict";
+/* ---------- icons ---------- */
+const I = {
+  today:'<svg viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>',
+  assistant:'<svg viewBox="0 0 24 24"><path d="M12 3l1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"/></svg>',
+  cards:'<svg viewBox="0 0 24 24"><rect x="3" y="6" width="14" height="14" rx="2"/><path d="M7 3h12a2 2 0 0 1 2 2v12"/></svg>',
+  files:'<svg viewBox="0 0 24 24"><path d="M7 18a4.5 4.5 0 0 1-.5-9A6 6 0 0 1 18 8a4 4 0 0 1 0 8"/><path d="M12 12v9m-3-6 3-3 3 3"/></svg>',
+  planner:'<svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>',
+  notes:'<svg viewBox="0 0 24 24"><path d="M6 3h9l4 4v14H6z"/><path d="M14 3v5h5M9 13h7M9 17h5"/></svg>',
+  toolkit:'<svg viewBox="0 0 24 24"><path d="M9 3h6v6h6v6h-6v6H9v-6H3V9h6z"/></svg>',
+  focus:'<svg viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2M9 2h6"/></svg>',
+  more:'<svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.3"/><circle cx="12" cy="12" r="1.3"/><circle cx="19" cy="12" r="1.3"/></svg>',
+  send:'<svg viewBox="0 0 24 24"><path d="M5 12h13M13 6l6 6-6 6"/></svg>',
+  image:'<svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="m21 16-5-5-9 9"/></svg>',
+  trash:'<svg viewBox="0 0 24 24"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg>',
+  plus:'<svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>',
+  copy:'<svg viewBox="0 0 24 24"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3"/></svg>',
+  save:'<svg viewBox="0 0 24 24"><path d="M5 3h11l3 3v15H5z"/><path d="M8 3v5h7M8 21v-7h8v7"/></svg>',
+  exams:'<svg viewBox="0 0 24 24"><path d="M9 4h6v3H9z"/><path d="M15 5h3a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h3"/><path d="m9 13 2 2 4-4"/></svg>',
+  open:'<svg viewBox="0 0 24 24"><path d="M14 4h6v6M20 4l-9 9M18 14v6H4V6h6"/></svg>',
+};
+const ROUTES = [
+  ['today','Today'],['assistant','AI Assistant'],['cards','Flashcards'],['exams','Exams'],['files','My Files'],
+  ['planner','Planner'],['notes','Notes'],['toolkit','Clinical Toolkit'],['focus','Focus Timer']
+];
+const TABS = ['today','assistant','cards','exams'];
+const PALETTES = [['pink','Blush pink','#E7A3BE'],['navy','Navy','#2A5592'],['forest','Forest','#2E6747'],['charcoal','Charcoal','#3C4654']];
+
+/* ---------- helpers ---------- */
+const $ = (s, r=document) => r.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const todayISO = () => { const d=new Date(); d.setMinutes(d.getMinutes()-d.getTimezoneOffset()); return d.toISOString().slice(0,10); };
+const addDays = (iso, n) => { const d=new Date(iso+'T12:00:00'); d.setDate(d.getDate()+n); return d.toISOString().slice(0,10); };
+const daysUntil = iso => Math.round((new Date(iso+'T12:00:00') - new Date(todayISO()+'T12:00:00'))/864e5);
+const fmtDate = iso => new Date(iso+'T12:00:00').toLocaleDateString(undefined,{weekday:'short',month:'short',day:'numeric'});
+const rid = p => p + '-' + Date.now().toString(36) + Math.random().toString(36).slice(2,7);
+const fmtSize = b => b>1e6 ? (b/1e6).toFixed(1)+' MB' : Math.max(1,Math.round(b/1e3))+' KB';
+const lsGet = (k, d) => { try { const v = localStorage.getItem(k); return v==null ? d : JSON.parse(v); } catch { return d; } };
+const lsSet = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} };
+let toastT;
+function toast(msg){ const t=$('#toast'); t.textContent=msg; t.hidden=false; clearTimeout(toastT); toastT=setTimeout(()=>t.hidden=true,2600); }
+async function copyText(text){ try{ await navigator.clipboard.writeText(text); toast('Copied'); }catch{ toast('Copy blocked here. Select the text and copy it instead.'); } }
+
+/* ---------- theme ---------- */
+function setPalette(p){ document.documentElement.dataset.palette = p; lsSet('nss-palette', p); renderSwatches(); }
+function renderSwatches(){
+  const cur = document.documentElement.dataset.palette || 'pink';
+  const html = PALETTES.map(([k,n,c]) => `<button class="sw" style="background:${c}" data-pal="${k}" aria-pressed="${k===cur}" title="${n}" aria-label="${n} theme"></button>`).join('');
+  document.querySelectorAll('.swatches').forEach(el => el.innerHTML = html);
+}
+document.documentElement.dataset.palette = lsGet('nss-palette','pink');
+
+/* ---------- store (cloud db, local fallback) ---------- */
+const S = { items:new Map(), mode:'loading', col:null, db:null, assets:null, sample:null };
+const LKEY = 'nss-local-items';
+function useLocal(){
+  if (S.mode === 'cloud') return;
+  S.mode = 'local';
+  S.items = new Map(Object.entries(lsGet(LKEY, {})));
+  render();
+}
+function persistLocal(){ if (S.mode==='local') lsSet(LKEY, Object.fromEntries(S.items)); }
+const all = kind => [...S.items.values()].filter(x => x.kind === kind);
+function put(item){
+  item.id = item.id || rid(item.kind);
+  const { id, ...data } = item;
+  S.items.set(id, item); persistLocal(); render();
+  if (S.mode==='cloud') S.col.doc(id).set(data).catch(e => toast('Could not save: ' + (e?.message || 'try again')));
+  return item;
+}
+function patch(id, fields){ const it=S.items.get(id); if(!it) return; Object.assign(it, fields); put(it); }
+function remove(id){
+  S.items.delete(id); persistLocal(); render();
+  if (S.mode==='cloud') S.col.doc(id).delete().catch(()=>toast('Could not delete. Try again.'));
+}
+async function initStore(){
+  if (!window.claude?.use){ useLocal(); return; }
+  const timer = setTimeout(useLocal, 10000);
+  const [db, user, assets, sample] = await Promise.all(['db','user','assets','sample'].map(n => window.claude.use(n).catch(()=>null)));
+  S.assets = assets; S.sample = sample;
+  let uid = null;
+  try { uid = user ? await user.id() : null; } catch {}
+  if (!db || !uid){ clearTimeout(timer); useLocal(); return; }
+  S.db = db; S.col = db.collection('data/users/' + uid);
+  S.col.onSnapshot(snap => {
+    clearTimeout(timer);
+    S.mode = 'cloud';
+    S.items = new Map(snap.docs.map(d => [d.id, { id:d.id, ...d.data() }]));
+    render();
+  }, () => { clearTimeout(timer); useLocal(); });
+  render();
+}
+
+/* ---------- routing / shell ---------- */
+let route = 'today';
+function readHash(){ const h=location.hash.slice(1); route = ROUTES.some(r=>r[0]===h) ? h : 'today'; }
+function renderShell(){
+  $('#nav-side').innerHTML = ROUTES.map(([k,n]) => `<a href="#${k}" ${k===route?'aria-current="page"':''}>${I[k]}<span>${n}</span></a>`).join('');
+  const short = {today:'Today',assistant:'Ask AI',cards:'Cards',exams:'Exams'};
+  const inMore = !TABS.includes(route);
+  $('#tabbar').innerHTML = TABS.map(k => `<a href="#${k}" ${k===route?'aria-current="page"':''}>${I[k]}<span>${short[k]}</span></a>`).join('')
+    + `<button type="button" data-act="more" ${inMore?'aria-current="page"':''}>${I.more}<span>More</span></button>`;
+  const sync = S.mode==='cloud' ? 'Synced to your account' : S.mode==='local' ? 'Saved on this device only' : 'Connecting…';
+  $('#sync-side').textContent = sync;
+  renderSwatches();
+}
+function openMore(){
+  const sh = $('#sheet');
+  sh.innerHTML = `<div class="sheet-bg" data-act="close-sheet"></div><div class="sheet" role="dialog" aria-label="More">
+    <nav class="nav">${ROUTES.filter(r=>!TABS.includes(r[0])).map(([k,n]) => `<a href="#${k}" data-act="close-sheet">${I[k]}<span>${n}</span></a>`).join('')}</nav>
+    <div class="stack"><span class="label">Colour theme</span><div class="swatches"></div>
+    <span class="tiny muted">${S.mode==='cloud'?'Synced to your account':'Saved on this device only'}</span></div></div>`;
+  sh.hidden = false; renderSwatches();
+}
+
+/* ---------- views ---------- */
+const V = {};
+let viewState = {};
+
+function courseOptions(sel){
+  const cs = all('course').sort((a,b)=>a.name.localeCompare(b.name));
+  return `<option value="">No course</option>` + cs.map(c => `<option value="${esc(c.name)}" ${c.name===sel?'selected':''}>${esc(c.name)}</option>`).join('');
+}
+function weekMinutes(){
+  const logs = all('log'); const days=[];
+  for (let i=6;i>=0;i--){ const d=addDays(todayISO(),-i); days.push({d, m: logs.filter(l=>l.date===d).reduce((s,l)=>s+(l.minutes||0),0)}); }
+  return days;
+}
+function dueCards(){ const t=todayISO(); return all('card').filter(c => !c.next || c.next <= t); }
+
+function seedExamples(){
+  const t = todayISO();
+  const ex = [
+    {kind:'course',name:'Pathophysiology'},{kind:'course',name:'Pharmacology'},{kind:'course',name:'Health Assessment'},{kind:'course',name:'Clinical Placement'},
+    {kind:'task',title:'Example: Pharm quiz — antihypertensives',type:'exam',due:addDays(t,9),course:'Pharmacology',done:false},
+    {kind:'task',title:'Example: Care plan draft due',type:'assignment',due:addDays(t,3),course:'Clinical Placement',done:false},
+    {kind:'task',title:'Example: Clinical shift 07:00',type:'clinical',due:addDays(t,1),course:'Clinical Placement',done:false},
+    {kind:'task',title:'Example: Read chapter on fluid & electrolytes',type:'reading',due:t,course:'Pathophysiology',done:false},
+    {kind:'card',deck:'Pharmacology',front:'Example: What does the suffix "-olol" indicate?',back:'Beta blocker (e.g. metoprolol). Check apical pulse and BP before giving; hold if HR is low per order.',box:1,next:t},
+    {kind:'card',deck:'Pathophysiology',front:'Example: Normal adult serum potassium (K⁺)?',back:'3.5–5.0 mmol/L',box:1,next:t},
+    {kind:'card',deck:'Health Assessment',front:'Example: What does SBAR stand for?',back:'Situation, Background, Assessment, Recommendation',box:1,next:t},
+    {kind:'note',title:'Example: Heart failure — key points',course:'Pathophysiology',body:'Left-sided: pulmonary congestion → crackles, dyspnea, orthopnea.\nRight-sided: systemic congestion → JVD, peripheral edema, weight gain.\nMonitor daily weights (same time, same scale).',updated:Date.now()},
+  ];
+  ex.forEach(x => put({...x}));
+  toast('Examples added. Delete them any time.');
+}
+
+V.today = () => {
+  const t = todayISO();
+  const tasks = all('task').filter(x=>!x.done).sort((a,b)=>(a.due||'9').localeCompare(b.due||'9'));
+  const soon = tasks.filter(x => x.due && daysUntil(x.due) <= 7);
+  const exam = tasks.filter(x => x.type==='exam' && x.due && daysUntil(x.due)>=0)[0];
+  const wk = weekMinutes(); const wkTotal = wk.reduce((s,d)=>s+d.m,0);
+  const due = dueCards().length;
+  const hr = new Date().getHours();
+  const hello = hr<12 ? 'Good morning' : hr<18 ? 'Good afternoon' : 'Good evening';
+  const isEmpty = S.items.size === 0 && S.mode !== 'loading';
+  return `
+  <div class="head"><div><h1>${hello}</h1><p class="muted">${fmtDate(t)} · one thing at a time.</p></div>
+    <a class="btn primary" href="#focus">${I.focus} Start a focus session</a></div>
+  ${isEmpty ? `<div class="banner"><span>Your space is empty. Add a course in Planner, or load a few examples to see how it works.</span><button class="btn sm" data-act="seed">Load examples</button></div>` : ''}
+  <div class="grid">
+    <div class="card"><span class="label">Next exam</span>
+      ${exam ? `<div class="row"><span class="stat">${daysUntil(exam.due)===0?'Today':daysUntil(exam.due)+' days'}</span></div><p class="t">${esc(exam.title)}</p><p class="small muted">${fmtDate(exam.due)}${exam.course?' · '+esc(exam.course):''}</p>
+        <button class="btn sm" data-act="plan-exam" data-id="${exam.id}">${I.assistant} Make me a study plan</button>`
+      : `<p class="muted small">No exams on the calendar. Add one in <a href="#planner">Planner</a> and the countdown shows here.</p>`}
+    </div>
+    <div class="card"><span class="label">Flashcards due</span><span class="stat">${due}</span>
+      <p class="small muted">${due ? 'A few minutes of review keeps them fresh.' : 'All caught up.'}</p>
+      <a class="btn sm" href="#cards">${due?'Review now':'Open flashcards'}</a></div>
+    <div class="card"><span class="label">Studied this week</span><span class="stat">${(wkTotal/60).toFixed(1)} h</span>
+      <div class="bars" style="height:60px">${barHTML(wk, true)}</div></div>
+  </div>
+  <div class="grid-2">
+    <div class="card"><div class="row between"><h2>Due in the next 7 days</h2><a class="btn sm ghost" href="#planner">All tasks</a></div>
+      ${soon.length ? `<div class="list">${soon.map(taskRow).join('')}</div>` : `<div class="empty small">Nothing due this week. Add assignments, exams and clinical shifts in Planner.</div>`}
+    </div>
+    <div class="card"><h2>Ask the study assistant</h2>
+      <textarea id="quick-ask" rows="3" placeholder="e.g. Explain how furosemide affects potassium"></textarea>
+      <div class="row"><button class="btn primary" data-act="quick-ask">${I.send} Ask</button><a class="btn ghost sm" href="#assistant">Browse suggested prompts</a></div>
+      <p class="tiny muted">Never type patient names or identifying details.</p>
+    </div>
+  </div>`;
+};
+function barHTML(wk, compact){
+  const max = Math.max(60, ...wk.map(d=>d.m));
+  return wk.map(d => `<div class="bar ${d.d===todayISO()?'today':''}" title="${d.m} min on ${fmtDate(d.d)}"><i style="height:${Math.max(3,d.m/max*100)}%"></i>${compact?'':`<span>${d.m?Math.round(d.m):''}</span>`}<span>${new Date(d.d+'T12:00').toLocaleDateString(undefined,{weekday:'narrow'})}</span></div>`).join('');
+}
+function taskRow(x){
+  const dd = x.due ? daysUntil(x.due) : null;
+  const when = dd==null ? '' : dd<0 ? `<span class="tiny" style="color:var(--bad)">${-dd}d overdue</span>` : dd===0 ? '<span class="tiny">Today</span>' : dd===1 ? '<span class="tiny">Tomorrow</span>' : `<span class="tiny muted">${fmtDate(x.due)}</span>`;
+  return `<div class="li ${x.done?'done':''}"><button class="check" role="checkbox" aria-checked="${!!x.done}" aria-label="Mark done" data-act="toggle-task" data-id="${x.id}"></button>
+    <div class="grow"><div class="t">${esc(x.title)}</div><div class="row" style="gap:6px;margin-top:3px"><span class="chip ${esc(x.type)}">${esc(x.type||'task')}</span>${x.course?`<span class="tiny muted">${esc(x.course)}</span>`:''}${when}</div></div>
+    <button class="iconbtn" aria-label="Delete" data-act="del" data-id="${x.id}">${I.trash}</button></div>`;
+}
+
+/* ----- assistant ----- */
+const PROMPTS = {
+  'Pathophysiology':[
+    ['Explain a condition','Explain the pathophysiology of [condition] step by step, from cause to signs and symptoms, at a nursing-student level. End with the top 3 nursing priorities.'],
+    ['Compare two conditions','Compare [condition A] and [condition B] in a table: cause, signs and symptoms, key labs, and nursing priorities.'],
+    ['Concept map outline','Build a concept map outline for a patient with [condition]: risk factors, pathophysiology, assessment findings, diagnostics, nursing interventions, and patient teaching.'],
+    ['Explain it simply','Explain [topic] like I\'m new to it, then again at exam level, then give me one analogy that will help me remember it.'],
+  ],
+  'Pharmacology':[
+    ['Drug card','Make a drug card for [drug]: class, mechanism of action, indications, usual adult dose range, key side effects, contraindications, nursing assessments before giving, and patient teaching. Use Canadian brand names.'],
+    ['Drug class overview','Summarize the [drug class] class: how it works, common suffix, examples, major side effects, and what to monitor.'],
+    ['Quiz me on a class','Quiz me on [drug class] with 5 questions, one at a time. Wait for my answer before giving feedback and the next question.'],
+    ['Memory tricks','Give me memory tricks for the [drug class] suffixes and their main adverse effects.'],
+  ],
+  'Dosage math':[
+    ['Practice set','Give me 5 dosage calculation problems (oral tablets, liquid, IV mL/h, IV drops/min, weight-based mg/kg). Show only the questions; reveal answers and working after I reply.'],
+    ['Check my work','Check my dosage calculation step by step and tell me exactly where I went wrong, if anywhere: [paste problem and my answer]'],
+    ['Explain a formula','Explain how to calculate [IV drip rate / weight-based dose / reconstitution] with a worked example in SI units.'],
+  ],
+  'Care plans & clinical':[
+    ['Nursing care plan','Help me build a nursing care plan for a patient with [medical diagnosis]: assessment data, 2–3 nursing diagnoses, SMART goals, interventions with rationales, and evaluation criteria.'],
+    ['SBAR handoff','Turn these de-identified clinical notes into a clear SBAR handoff: [notes]'],
+    ['Placement prep','I start a placement on a [unit type, e.g. cardiology] unit. What conditions, medications, assessments and skills should I review before my first shift?'],
+    ['Interpret findings','For a [age]-year-old patient with [condition], these are the vitals and labs: [values]. Which are abnormal, what might they mean, and what would I report to the nurse or physician?'],
+    ['Head-to-toe checklist','Give me a head-to-toe assessment checklist I can memorize, in order, with normal findings for each system.'],
+  ],
+  'Exam prep':[
+    ['NCLEX-style questions','Write 5 NCLEX-style questions on [topic], including at least one select-all-that-apply. Give rationales for every option after I answer.'],
+    ['Prioritization','Teach me the prioritization frameworks (ABCs, Maslow, acute vs chronic, stable vs unstable) with 3 practice "who do you see first?" questions.'],
+    ['Study plan','Make a day-by-day study plan for my [course] exam on [date]. I can study [hours] per day. Topics: [list topics].'],
+    ['OIIQ exam prep','Explain how the OIIQ professional exam for Quebec nurses is usually structured and give me a study approach for clinical-judgment questions. Tell me to confirm current details on the OIIQ website.'],
+    ['Summarize my notes','Summarize these notes into a one-page exam review with key terms in bold: [paste notes]'],
+  ],
+  'Français clinique':[
+    ['Clinical phrases','Give me 20 French phrases for [situation, e.g. pain assessment] as used in Québec hospitals, with English translations and pronunciation tips.'],
+    ['Role-play admission','Role-play a French-speaking patient being admitted to my unit. Speak only French, keep it simple, and correct my French gently after each reply.'],
+    ['Translate teaching','Translate this patient teaching into simple, plain Québec French: [text]'],
+    ['Vocabulary quiz','Quiz me on 10 French medical vocabulary words for [body system], one at a time.'],
+  ],
+  'Writing & research':[
+    ['Reflective journal','Help me outline a reflective journal entry using Gibbs\' reflective cycle about this clinical experience: [describe, without identifying details]'],
+    ['APA 7 help','Show me how to format an APA 7 reference and in-text citation for [journal article / website / textbook], with an example.'],
+    ['Improve my paragraph','Give me feedback on clarity, structure and evidence in this paragraph. Do not rewrite it for me; point out what to fix: [paragraph]'],
+    ['Find evidence','What search terms and databases (e.g. CINAHL, PubMed) should I use to find evidence on [topic]? Suggest MeSH terms.'],
+  ],
+  'Wellbeing':[
+    ['Triage my week','I have these deadlines and shifts this week: [list]. I feel overwhelmed. Help me triage what to do first and what can wait.'],
+    ['After a hard shift','I had a hard clinical shift. Help me debrief it in a healthy way with a few guided questions.'],
+    ['Sleep around shifts','Give me practical tips for sleep and meals around early 07:00 clinical shifts.'],
+  ],
+};
+const SYSTEM = `You are a friendly, precise study assistant for a nursing student at McGill University's Ingram School of Nursing in Montreal, Quebec, Canada.
+Teach clearly and accurately at a university nursing level. Use Canadian context: SI units (mmol/L, µmol/L, °C), Canadian drug names, Quebec practice (OIIQ) and NCLEX-RN style when relevant. Use short headings, bullets and tables where they help. When quizzing, ask one question at a time and wait.
+This is for studying, not real patient care: remind the student to follow their course materials, clinical instructor and agency protocols when it matters. If the student shares anything that could identify a real patient, ask them to remove it.`;
+viewState.chat = [];
+viewState.cat = 'Pathophysiology';
+viewState.images = [];
+let chatAbort = null;
+
+V.assistant = () => {
+  const cats = Object.keys(PROMPTS);
+  const noAI = S.mode!=='loading' && !S.sample;
+  return `
+  <div class="head"><div><h1>AI Study Assistant</h1><p class="muted">Pick a suggested prompt, fill in the [brackets], or ask anything.</p></div>
+    ${viewState.chat.length ? `<button class="btn sm" data-act="new-chat">New chat</button>`:''}</div>
+  ${noAI ? `<div class="banner">The assistant works when this page is opened on claude.ai while signed in.</div>`:''}
+  ${viewState.chat.length===0 ? `
+  <div class="stack">
+    <div class="prompt-cats" role="tablist">${cats.map(c=>`<button class="pill" aria-pressed="${c===viewState.cat}" data-act="cat" data-cat="${esc(c)}">${esc(c)}</button>`).join('')}</div>
+    <div class="prompts">${PROMPTS[viewState.cat].map(([t,p],i)=>`<button class="prompt" data-act="use-prompt" data-i="${i}"><b>${esc(t)}</b><span class="muted">${esc(p.length>110?p.slice(0,110)+'…':p)}</span></button>`).join('')}</div>
+  </div>` : ''}
+  <div class="chat" id="chat">${viewState.chat.map((m,i)=>msgHTML(m,i)).join('')}</div>
+  <div class="composer">
+    ${viewState.images.length ? `<div class="attach">${viewState.images.map((b,i)=>`<div class="thumb"><img src="${b.url}" alt="Attached image ${i+1}"><button data-act="rm-img" data-i="${i}" aria-label="Remove image">×</button></div>`).join('')}</div>`:''}
+    <div class="composer-box">
+      <button class="iconbtn" data-act="pick-img" aria-label="Attach a photo of slides or notes" title="Attach a photo of your slides or notes">${I.image}</button>
+      <textarea id="ask" rows="1" placeholder="Ask about a condition, drug, calculation…">${esc(viewState.draft||'')}</textarea>
+      <button class="btn primary" data-act="send" aria-label="Send" ${chatAbort?'disabled':''}>${chatAbort?'<span class="spin"></span>':I.send}</button>
+    </div>
+    <p class="tiny muted">For studying only. Check facts against your course materials. Never include patient identifiers.</p>
+  </div>`;
+};
+function msgHTML(m, i){
+  if (m.role==='user') return `<div class="msg u">${esc(m.content)}${m.imgs?`<div class="tiny muted">📎 ${m.imgs} image${m.imgs>1?'s':''}</div>`:''}</div>`;
+  return `<div class="msg a" data-i="${i}">${m.content ? md(m.content) : '<span class="spin"></span> <span class="muted small">Thinking…</span>'}
+    ${m.done ? `<div class="row" style="margin-top:8px"><button class="btn sm ghost" data-act="copy-msg" data-i="${i}">${I.copy} Copy</button><button class="btn sm ghost" data-act="save-msg" data-i="${i}">${I.save} Save to notes</button><button class="btn sm ghost" data-act="cards-msg" data-i="${i}">${I.cards} Make flashcards</button></div>`:''}</div>`;
+}
+function md(src){
+  const lines = esc(src).split('\n'); let out=''; let list=null; let table=[];
+  const inline = s => s.replace(/`([^`]+)`/g,'<code>$1</code>').replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>').replace(/(^|[^*])\*([^*\n]+)\*/g,'$1<em>$2</em>');
+  const closeList = () => { if(list){ out += `</${list}>`; list=null; } };
+  const flushTable = () => { if(!table.length) return; const rows=table.filter(r=>!/^\s*\|?\s*:?-{2,}/.test(r)); out += '<div class="tbl"><table>' + rows.map((r,i)=>'<tr>'+r.replace(/^\s*\||\|\s*$/g,'').split('|').map(c=>i===0?`<th>${inline(c.trim())}</th>`:`<td>${inline(c.trim())}</td>`).join('')+'</tr>').join('') + '</table></div>'; table=[]; };
+  for (const raw of lines){
+    const l = raw.trimEnd();
+    if (/^\s*\|.*\|\s*$/.test(l)){ closeList(); table.push(l); continue; } else flushTable();
+    let m;
+    if ((m = l.match(/^(#{1,4})\s+(.*)/))){ closeList(); out += `<h3>${inline(m[2])}</h3>`; }
+    else if ((m = l.match(/^\s*[-*•]\s+(.*)/))){ if(list!=='ul'){ closeList(); out+='<ul>'; list='ul'; } out += `<li>${inline(m[1])}</li>`; }
+    else if ((m = l.match(/^\s*\d+[.)]\s+(.*)/))){ if(list!=='ol'){ closeList(); out+='<ol>'; list='ol'; } out += `<li>${inline(m[1])}</li>`; }
+    else if (!l.trim()){ closeList(); }
+    else { closeList(); out += `<p>${inline(l)}</p>`; }
+  }
+  closeList(); flushTable(); return out;
+}
+async function sendChat(text){
+  text = (text||'').trim();
+  if (!text || chatAbort) return;
+  if (!S.sample){ toast('The assistant needs claude.ai while signed in.'); return; }
+  const imgs = viewState.images.map(x=>x.blob);
+  viewState.chat.push({role:'user', content:text, imgs: imgs.length||0});
+  viewState.images = []; viewState.draft = '';
+  const a = {role:'assistant', content:'', done:false}; viewState.chat.push(a);
+  chatAbort = new AbortController(); render(); scrollChat();
+  const msgs = viewState.chat.filter(m=>m!==a).map((m,i)=>({role:m.role, content: i===0 ? SYSTEM+'\n\n---\n\nStudent: '+m.content : m.content}));
+  try{
+    const opts = { signal: chatAbort.signal, cache:false, onText: ({text}) => { a.content = text; updateLastMsg(a); } };
+    if (imgs.length) opts.images = imgs;
+    const r = await S.sample(msgs, opts);
+    a.content = r.text;
+  }catch(e){
+    a.content = (e?.text ? e.text + '\n\n' : '') + (e?.code==='not_granted' ? '_The assistant was not allowed. You can turn it on from this page\'s Permissions menu._' : e?.code==='rate_limited' ? '_Too many requests right now. Wait a minute and try again._' : e?.code==='cancelled' ? '_Stopped._' : '_Something went wrong. Try again._');
+  }
+  a.done = true; chatAbort = null; render(); scrollChat();
+}
+function updateLastMsg(a){
+  const el = document.querySelector(`.msg.a[data-i="${viewState.chat.indexOf(a)}"]`);
+  if (el) el.innerHTML = md(a.content);
+}
+function scrollChat(){ const c=$('#chat'); if(c && c.lastElementChild) c.lastElementChild.scrollIntoView({block:'end', behavior:'smooth'}); }
+
+/* ----- flashcards ----- */
+viewState.deck = '';
+viewState.study = null;
+V.cards = () => {
+  const cards = all('card');
+  const decks = [...new Set(cards.map(c=>c.deck||'General'))].sort();
+  const deck = viewState.deck;
+  const inDeck = cards.filter(c => !deck || (c.deck||'General')===deck);
+  const due = inDeck.filter(c => !c.next || c.next <= todayISO());
+  const st = viewState.study;
+  if (st){
+    const c = S.items.get(st.queue[st.i]);
+    if (!c) { viewState.study=null; return V.cards(); }
+    return `<div class="head"><div><h1>Reviewing${deck?' '+esc(deck):''}</h1><p class="muted">${st.i+1} of ${st.queue.length} · tap the card to flip</p></div><button class="btn sm" data-act="end-study">Finish</button></div>
+    <div class="flash ${st.flip?'flip':''}" data-act="flip" role="button" tabindex="0" aria-label="Flip card">
+      <div class="flash-in"><div class="face"><span class="label">Question</span><div>${esc(c.front)}</div></div><div class="face back"><span class="label">Answer</span><div>${esc(c.back)}</div></div></div></div>
+    <div class="row" style="justify-content:center">${st.flip ? `<button class="btn" data-act="grade" data-g="0">Again</button><button class="btn" data-act="grade" data-g="1">Hard</button><button class="btn primary" data-act="grade" data-g="2">Got it</button>` : `<button class="btn primary" data-act="flip">Show answer</button>`}</div>
+    <p class="tiny muted" style="text-align:center">"Got it" moves a card to a longer gap (1, 3, 7, 14, then 30 days). "Again" brings it back tomorrow.</p>`;
+  }
+  return `
+  <div class="head"><div><h1>Flashcards</h1><p class="muted">Spaced repetition: review what's due, skip what you know.</p></div>
+    <button class="btn primary" data-act="start-study" ${due.length?'':'disabled'}>Review ${due.length} due</button></div>
+  <div class="pills"><button class="pill" aria-pressed="${!deck}" data-act="deck" data-deck="">All decks</button>${decks.map(d=>`<button class="pill" aria-pressed="${d===deck}" data-act="deck" data-deck="${esc(d)}">${esc(d)}</button>`).join('')}</div>
+  <div class="grid-2">
+    <div class="card"><h2>${inDeck.length} card${inDeck.length===1?'':'s'}</h2>
+      ${inDeck.length ? `<div class="list">${inDeck.slice().sort((a,b)=>(a.next||'').localeCompare(b.next||'')).map(c=>`<div class="li"><div class="grow"><div class="t">${esc(c.front)}</div><div class="small muted">${esc(c.back)}</div><div class="row" style="gap:8px;margin-top:4px"><div class="boxes" title="Strength ${c.box||1} of 5">${[1,2,3,4,5].map(n=>`<i class="${n<=(c.box||1)?'on':''}"></i>`).join('')}</div><span class="tiny muted">${esc(c.deck||'General')} · ${!c.next||c.next<=todayISO()?'due now':'next '+fmtDate(c.next)}</span></div></div><button class="iconbtn" aria-label="Delete card" data-act="del" data-id="${c.id}">${I.trash}</button></div>`).join('')}</div>`
+      : `<div class="empty small">No cards yet. Write one on the right, or let the AI make a set from your notes.</div>`}
+    </div>
+    <div class="stack">
+      <form class="card" id="card-form"><h2>New card</h2>
+        <label class="f">Question<textarea id="cf-front" rows="2" required></textarea></label>
+        <label class="f">Answer<textarea id="cf-back" rows="2" required></textarea></label>
+        <label class="f">Deck<input type="text" id="cf-deck" list="deck-list" value="${esc(deck)}" placeholder="e.g. Pharmacology"></label>
+        <datalist id="deck-list">${[...new Set([...decks, ...all('course').map(c=>c.name)])].map(d=>`<option value="${esc(d)}">`).join('')}</datalist>
+        <button class="btn primary" type="submit">${I.plus} Add card</button></form>
+      <div class="card"><h2>Make cards with AI</h2>
+        <label class="f">Paste notes or name a topic<textarea id="ai-cards-src" rows="4" placeholder="e.g. Signs of hypoglycemia vs hyperglycemia">${esc(viewState.aiSrc||'')}</textarea></label>
+        <button class="btn" data-act="ai-cards" ${viewState.aiBusy?'disabled':''}>${viewState.aiBusy?'<span class="spin"></span> Writing cards…':I.assistant+' Generate 8 cards'}</button>
+        ${viewState.aiCards ? `<div class="list">${viewState.aiCards.map((c,i)=>`<div class="li"><div class="grow"><div class="t">${esc(c.front)}</div><div class="small muted">${esc(c.back)}</div></div></div>`).join('')}</div>
+          <div class="row"><button class="btn primary sm" data-act="ai-cards-keep">Add all to ${esc(deck||'General')}</button><button class="btn sm ghost" data-act="ai-cards-drop">Discard</button></div>`:''}
+      </div>
+    </div>
+  </div>`;
+};
+async function aiCards(src){
+  if (!S.sample){ toast('AI needs claude.ai while signed in.'); return; }
+  if (!src.trim()) { toast('Paste some notes or name a topic first.'); return; }
+  viewState.aiBusy = true; viewState.aiSrc = src; render();
+  try{
+    const out = await S.sample.json(`${SYSTEM}\n\nCreate 8 high-yield flashcards for a nursing student from the material below. Keep each question short and each answer under 30 words. Return only JSON: {"cards":[{"front":"...","back":"..."}]}\n\nMaterial:\n${src.slice(0,12000)}`, {modelTier:'default'});
+    const cards = (out?.cards || out || []).filter(c => c && c.front && c.back).slice(0,12);
+    viewState.aiCards = cards.length ? cards : null;
+    if (!cards.length) toast('No cards came back. Try more detail.');
+  }catch(e){ toast(e?.code==='not_granted' ? 'AI was not allowed for this page.' : 'Could not make cards. Try again.'); }
+  viewState.aiBusy = false; render();
+}
+
+/* ----- files ----- */
+viewState.fileFilter = '';
+viewState.uploading = 0;
+V.files = () => {
+  const files = all('file').sort((a,b)=>(b.created||0)-(a.created||0));
+  const ff = viewState.fileFilter.toLowerCase();
+  const shown = files.filter(f => !ff || (f.name+' '+(f.course||'')).toLowerCase().includes(ff));
+  const can = !!S.assets;
+  const bytes = files.reduce((s,f)=>s+(f.size||0),0);
+  return `
+  <div class="head"><div><h1>My Files</h1><p class="muted">Lecture slides, readings, lab sheets and photos, stored in the cloud and sorted by course.</p></div></div>
+  ${S.mode!=='loading' && !can ? `<div class="banner">Cloud file storage works when you open this page on claude.ai while signed in.</div>`:''}
+  <div class="drop" id="drop">
+    ${I.files.replace('<svg','<svg width="34" height="34" style="stroke:var(--accent);fill:none;stroke-width:1.6"')}
+    <b>Drop files here or choose them</b><span class="small muted">PDF, images, Word exports as PDF, text · up to 20 MB each</span>
+    <div class="row" style="justify-content:center"><label class="f" style="flex:0 1 220px"><select id="up-course" aria-label="Course for new files">${courseOptions(viewState.upCourse||'')}</select></label>
+    <button class="btn primary" data-act="pick-files" ${can?'':'disabled'}>${viewState.uploading?`<span class="spin"></span> Uploading ${viewState.uploading}…`:'Choose files'}</button></div>
+  </div>
+  <div class="card">
+    <div class="row between"><h2>${files.length} file${files.length===1?'':'s'} <span class="small muted">· ${fmtSize(bytes)}</span></h2>
+      <input type="search" id="file-search" placeholder="Search files" value="${esc(viewState.fileFilter)}" style="max-width:240px"></div>
+    ${shown.length ? `<div class="list">${shown.map(f=>`<div class="li">
+      <div class="ficon">${/^image\//.test(f.type)?`<img src="${esc(f.url)}" alt="">`:esc((f.name.split('.').pop()||'file').slice(0,4))}</div>
+      <div class="grow"><div class="t">${esc(f.name)}</div><div class="tiny muted">${f.course?esc(f.course)+' · ':''}${fmtSize(f.size||0)} · ${new Date(f.created).toLocaleDateString()}</div></div>
+      <a class="iconbtn" href="${esc(f.url)}" target="_blank" rel="noopener" aria-label="Open ${esc(f.name)}">${I.open}</a>
+      ${/^image\//.test(f.type)?`<button class="iconbtn" data-act="ask-img" data-id="${f.id}" aria-label="Ask AI about this image" title="Ask AI about this image">${I.assistant}</button>`:''}
+      ${viewState.confirm===f.id ? `<span class="inline-confirm">Delete?<button class="btn sm danger" data-act="del-file" data-id="${f.id}">Yes</button><button class="btn sm ghost" data-act="cancel">No</button></span>` : `<button class="iconbtn" data-act="confirm" data-id="${f.id}" aria-label="Delete ${esc(f.name)}">${I.trash}</button>`}
+    </div>`).join('')}</div>` : `<div class="empty small">${files.length?'No files match.':'No files yet. Upload your first lecture slides above.'}</div>`}
+  </div>`;
+};
+async function uploadFiles(list){
+  if (!S.assets){ toast('File storage needs claude.ai while signed in.'); return; }
+  const course = $('#up-course')?.value || '';
+  viewState.upCourse = course;
+  for (const file of list){
+    viewState.uploading++; render();
+    try{
+      const r = await S.assets.upload(file);
+      put({kind:'file', name:file.name, type:file.type||r.contentType, size:r.sizeBytes||file.size, assetId:r.id, url:r.url, course, created:Date.now()});
+    }catch(e){
+      toast(e?.code==='too_large' ? `${file.name} is over 20 MB.` : e?.code==='unsupported_type' ? `${file.name}: that file type can't be stored. Try PDF or an image.` : `${file.name} didn't upload. Try again.`);
+    }
+    viewState.uploading--; render();
+  }
+}
+
+/* ----- planner ----- */
+viewState.planFilter = 'open';
+V.planner = () => {
+  const tasks = all('task');
+  const f = viewState.planFilter;
+  const shown = tasks.filter(x => f==='open' ? !x.done : f==='done' ? x.done : f==='all' ? true : (!x.done && x.type===f))
+    .sort((a,b)=>(a.due||'9999').localeCompare(b.due||'9999'));
+  const groups = {};
+  shown.forEach(x => { const k = !x.due ? 'No date' : daysUntil(x.due)<0 ? 'Overdue' : x.due; (groups[k] = groups[k]||[]).push(x); });
+  const courses = all('course').sort((a,b)=>a.name.localeCompare(b.name));
+  return `
+  <div class="head"><div><h1>Planner</h1><p class="muted">Assignments, exams, readings and clinical shifts in one list.</p></div></div>
+  <div class="grid-2">
+    <div class="stack">
+      <div class="pills">${[['open','To do'],['exam','Exams'],['assignment','Assignments'],['clinical','Clinical'],['reading','Readings'],['done','Done']].map(([k,n])=>`<button class="pill" aria-pressed="${f===k}" data-act="plan-filter" data-f="${k}">${n}</button>`).join('')}</div>
+      <div class="card">${shown.length ? Object.entries(groups).map(([k,xs])=>`<div class="stack" style="gap:0"><span class="label" style="margin-top:6px">${k==='Overdue'||k==='No date'?k:fmtDate(k)}</span><div class="list">${xs.map(taskRow).join('')}</div></div>`).join('') : `<div class="empty small">Nothing here. Add your first deadline with the form.</div>`}</div>
+    </div>
+    <div class="stack">
+      <form class="card" id="task-form"><h2>Add to planner</h2>
+        <label class="f">What<input type="text" id="tf-title" required placeholder="e.g. Pathophys midterm"></label>
+        <div class="form-row"><label class="f">Date<input type="date" id="tf-due" value="${todayISO()}"></label>
+        <label class="f">Type<select id="tf-type"><option value="assignment">Assignment</option><option value="exam">Exam</option><option value="clinical">Clinical shift</option><option value="reading">Reading</option></select></label></div>
+        <label class="f">Course<select id="tf-course">${courseOptions('')}</select></label>
+        <button class="btn primary" type="submit">${I.plus} Add</button></form>
+      <div class="card"><h2>My courses</h2>
+        <div class="pills">${courses.map(c=>`<span class="chip accent">${esc(c.name)}<button class="iconbtn" style="width:22px;height:22px" aria-label="Remove ${esc(c.name)}" data-act="del" data-id="${c.id}">×</button></span>`).join('') || '<span class="small muted">Add the courses you take this term.</span>'}</div>
+        <form class="row" id="course-form" style="flex-wrap:nowrap"><input type="text" id="co-name" placeholder="e.g. PHGY 209 or Pharmacology" required><button class="btn" type="submit">Add</button></form>
+      </div>
+    </div>
+  </div>`;
+};
+
+/* ----- notes ----- */
+viewState.noteId = null;
+V.notes = () => {
+  const notes = all('note').sort((a,b)=>(b.updated||0)-(a.updated||0));
+  const cur = viewState.noteId && S.items.get(viewState.noteId);
+  const q = (viewState.noteQ||'').toLowerCase();
+  const shown = notes.filter(n => !q || (n.title+' '+n.body+' '+(n.course||'')).toLowerCase().includes(q));
+  return `
+  <div class="head"><div><h1>Notes</h1><p class="muted">Quick notes by course. Turn any note into a summary or flashcards.</p></div>
+    <button class="btn primary" data-act="new-note">${I.plus} New note</button></div>
+  <div class="grid-2" style="grid-template-columns:minmax(0,.8fr) minmax(0,1.4fr)">
+    <div class="card"><input type="search" id="note-q" placeholder="Search notes" value="${esc(viewState.noteQ||'')}">
+      ${shown.length ? `<div class="list">${shown.map(n=>`<a class="li" href="#notes" data-act="open-note" data-id="${n.id}" style="text-decoration:none;color:inherit;${n.id===viewState.noteId?'background:var(--surface2);border-radius:10px;padding-inline:8px':''}"><div class="grow"><div class="t">${esc(n.title||'Untitled')}</div><div class="tiny muted">${n.course?esc(n.course)+' · ':''}${new Date(n.updated).toLocaleDateString()}</div></div></a>`).join('')}</div>` : `<div class="empty small">No notes yet.</div>`}
+    </div>
+    ${cur ? `<div class="card note-editor">
+      <input type="text" id="ne-title" value="${esc(cur.title)}" placeholder="Title" style="font-family:var(--display);font-size:1.15rem;font-weight:600">
+      <select id="ne-course">${courseOptions(cur.course)}</select>
+      <textarea id="ne-body" placeholder="Write or paste your notes…">${esc(cur.body)}</textarea>
+      <div class="row between"><div class="row"><button class="btn sm" data-act="note-ai" data-mode="summary">${I.assistant} Summarize</button><button class="btn sm" data-act="note-ai" data-mode="quiz">Quiz me</button><button class="btn sm" data-act="note-cards">${I.cards} Flashcards</button></div>
+      ${viewState.confirm===cur.id ? `<span class="inline-confirm">Delete note?<button class="btn sm danger" data-act="del-note" data-id="${cur.id}">Yes</button><button class="btn sm ghost" data-act="cancel">No</button></span>` : `<button class="btn sm ghost danger" data-act="confirm" data-id="${cur.id}">${I.trash} Delete</button>`}</div>
+      <span class="tiny muted" id="ne-status">Saves automatically</span>
+    </div>` : `<div class="empty">Pick a note, or start a new one.</div>`}
+  </div>`;
+};
+let noteT;
+function saveNoteSoon(){
+  clearTimeout(noteT); const st=$('#ne-status'); if(st) st.textContent='Saving…';
+  noteT = setTimeout(() => {
+    const it = S.items.get(viewState.noteId); if(!it) return;
+    Object.assign(it, {title:$('#ne-title').value, course:$('#ne-course').value, body:$('#ne-body').value, updated:Date.now()});
+    const {id, ...data} = it; persistLocal();
+    if (S.mode==='cloud') S.col.doc(id).set(data).catch(()=>toast('Could not save note.'));
+    const s=$('#ne-status'); if(s) s.textContent='Saved';
+  }, 700);
+}
+
+/* ----- exams ----- */
+/* Each question: t = topic, q = question, a = model answer (answer key), o = choices, first one is correct (shuffled when shown), n = optional extra note. */
+const EXAMS = [{
+  id:'cardiac-1', title:'Acute Cardiac Illness: Practice Exam', course:'NUR 323/623',
+  desc:'Hypertension, angina, ACS/MI, PCI and fibrinolysis, chest tubes, CABG, pericarditis and atrial fibrillation.',
+  qs:[
+  {t:'Hypertension',q:'Why do tachycardia and hypertension worsen myocardial ischemia?',
+   a:'The coronaries fill during diastole. Tachycardia shortens diastole and HTN impairs filling (↓ supply), while both ↑ O₂ demand.',
+   o:['Coronaries fill in diastole: tachycardia shortens it and HTN impairs filling, while both ↑ O₂ demand','They lower preload, so less blood enters the coronaries during systole','Both ↓ myocardial O₂ demand but trigger platelet aggregation in the coronaries','They cause the coronaries to fill only during systole, when the heart is contracting']},
+  {t:'Hypertension',q:'Which is the most important endocrine system controlling BP, and what does it do?',
+   a:'Renin–angiotensin–aldosterone system: vasoconstriction (↑ SVR) + Na⁺/H₂O reabsorption → ↑ BP.',
+   o:['Renin–angiotensin–aldosterone system: vasoconstriction (↑ SVR) + Na⁺/H₂O reabsorption → ↑ BP','Atrial natriuretic peptide: Na⁺ and water retention → ↑ BP','Thyroid hormone: ↓ heart rate and vasodilation → ↓ BP','Insulin: renal Na⁺ excretion and vasodilation → ↓ BP']},
+  {t:'Hypertension',q:'A patient\'s BP is high in clinic but normal at home. What is the term, and what test confirms it?',
+   a:'White-coat hypertension; confirm with 24-h ambulatory BP monitoring (ABPM) or a home BP series.',
+   o:['White-coat hypertension; 24-h ambulatory BP monitoring (or home BP series)','Masked hypertension; repeat clinic BP in 1 week','Orthostatic hypotension; tilt-table test','Secondary hypertension; renal ultrasound']},
+  {t:'Hypertension',q:'What is the earliest lab marker of hypertensive nephropathy?',
+   a:'Microalbuminuria.',
+   o:['Microalbuminuria','↑ Serum creatinine','↑ BUN','Hematuria'],n:'Creatinine and BUN rise later, once kidney function is already reduced.'},
+  {t:'Hypertension',q:'A patient on ramipril develops a dry cough. What is the mechanism, and what is the plan?',
+   a:'↑ Bradykinin (ACE also breaks down bradykinin); switch to an ARB.',
+   o:['↑ Bradykinin; switch to an ARB','↑ Angiotensin II; switch to another ACE inhibitor','Bronchospasm from β-blockade; add a bronchodilator','Hyperkalemia; hold the dose and recheck K⁺']},
+  {t:'Angina & CAD',q:'Stable vs unstable angina: what are the two key differences?',
+   a:'Stable: predictable trigger, relieved by rest/NTG. Unstable: unpredictable, ↑ frequency/duration, occurs with less exertion or at rest, so it is an emergency. Neither has myocardial injury (troponin normal).',
+   o:['Stable: predictable trigger, relieved by rest/NTG. Unstable: unpredictable, can occur at rest, an emergency','Stable has normal troponin; unstable always has ↑ troponin','Stable occurs at rest; unstable occurs only with exertion','Unstable is relieved by rest; stable needs urgent PCI'],n:'Neither stable nor unstable angina causes myocardial injury, so troponin stays normal.'},
+  {t:'Angina & CAD',q:'Which patients most often have silent ischemia, and why?',
+   a:'Diabetics: neuropathy (loss of nerve endings), low vagal tone, higher pain threshold, ↑ endorphins.',
+   o:['Diabetics: neuropathy (loss of nerve endings), low vagal tone, higher pain threshold, ↑ endorphins','Hypertensive patients: LV hypertrophy blocks cardiac pain fibres','Young athletes: high vagal tone hides the pain','Smokers: nicotine numbs cardiac nerve endings']},
+  {t:'Angina & CAD',q:'A young postpartum woman has an MI and no atherosclerosis. What is the likely cause?',
+   a:'SCAD (spontaneous coronary artery dissection).',
+   o:['Spontaneous coronary artery dissection (SCAD)','Atherosclerotic plaque rupture in the LAD','Pulmonary embolism','Acute pericarditis']},
+  {t:'ACS & MI',q:'Differentiate STEMI from NSTEMI.',
+   a:'Both: chest pain + ↑ troponin. STEMI: ST↑ >1 mm in 2 contiguous leads or new LBBB (complete occlusion, transmural) → emergency reperfusion. NSTEMI: no ST elevation (partial occlusion).',
+   o:['STEMI: ST↑ >1 mm in 2 contiguous leads or new LBBB (complete occlusion); NSTEMI: no ST↑ (partial occlusion). Both ↑ troponin','STEMI has ↑ troponin; NSTEMI has normal troponin','NSTEMI is a complete occlusion; STEMI is a partial occlusion','STEMI shows ST depression; NSTEMI shows ST elevation in 2 contiguous leads']},
+  {t:'ACS & MI',q:'A patient in hospital reports 8/10 chest pressure. What are your first two actions?',
+   a:'Stay with the patient / stop activity and position semi-Fowler\'s, and get a 12-lead ECG + vital signs (OVEN).',
+   o:['Stay with the patient in semi-Fowler\'s; get a 12-lead ECG + vital signs (OVEN)','Draw a troponin and wait for the result before acting','Apply O₂ 15 L by non-rebreather and walk the patient back to bed','Call the family and give acetaminophen']},
+  {t:'ACS & MI',q:'SpO₂ is 97 % on room air during chest pain. Do you give O₂?',
+   a:'No. Per the slides, O₂ only if SpO₂ <90 % (or dyspnea/HF signs per protocol).',
+   o:['No: O₂ only if SpO₂ <90 % (or dyspnea/HF signs per protocol)','Yes: every patient with chest pain gets 4 L/min by nasal prongs','Yes: 100 % by non-rebreather to maximize myocardial O₂','No: O₂ is contraindicated in all MIs']},
+  {t:'ACS & MI',q:'Troponin drawn 1 h after onset is normal. Does that rule out MI?',
+   a:'No. Troponin rises 3–12 h after onset; repeat it serially with serial ECGs.',
+   o:['No: troponin rises 3–12 h after onset; repeat serially with serial ECGs','Yes: a normal troponin at any time excludes MI','Yes, as long as the ECG is also normal','No: order CK-MB instead, troponin is not useful']},
+  {t:'ACS & MI',q:'ST elevation in II, III and aVF. Which wall and artery? What extra ECG do you get?',
+   a:'Inferior wall, RCA; right-sided ECG (V4R) to check for RV involvement.',
+   o:['Inferior wall, RCA; right-sided ECG (V4R) for RV involvement','Anterior wall, LAD; posterior leads V7–V9','Lateral wall, circumflex; repeat the standard 12-lead','Septal wall, LAD; 24-h Holter']},
+  {t:'ACS & MI',q:'How should ASA be given in suspected MI, and why?',
+   a:'162–325 mg chewed and swallowed: faster absorption; blocks COX-1/thromboxane A₂ → ↓ platelet aggregation.',
+   o:['162–325 mg chewed and swallowed: faster absorption; blocks COX-1/thromboxane A₂ platelet aggregation','81 mg enteric-coated, swallowed whole, to protect the stomach','650 mg IV to dissolve the clot','325 mg held under the tongue to dilate the coronaries']},
+  {t:'ACS & MI',q:'Does heparin dissolve the coronary clot?',
+   a:'No. It prevents propagation / new thrombus; fibrinolytics or PCI open the artery.',
+   o:['No: it prevents clot propagation/new thrombus; fibrinolytics or PCI open the artery','Yes: heparin breaks down fibrin in the clot','Yes, but only when given as an IV bolus','No: heparin only blocks platelet aggregation, like ASA']},
+  {t:'ACS & MI',q:'What is the most reliable sign of reperfusion after fibrinolysis? What is the major complication?',
+   a:'ST segment returns to baseline; bleeding.',
+   o:['ST segment returns to baseline; bleeding','Chest pain increases; hypotension','New Q waves appear; heart block','Troponin normalizes within 1 h; infection']},
+  {t:'ACS & MI',q:'Post-PCI (femoral access) patient has back/flank pain, ↓ BP and ↑ HR. What do you suspect?',
+   a:'Retroperitoneal bleed. Notify immediately.',
+   o:['Retroperitoneal bleed: notify immediately','Kidney stone from the contrast dye','Musculoskeletal pain from bed rest: give an analgesic','Pulmonary embolism from immobility']},
+  {t:'ACS & MI',q:'What is the most common complication after MI, and the most lethal early rhythm?',
+   a:'Dysrhythmias (80 %); VF (often within 4 h, preceded by PVCs/VT).',
+   o:['Dysrhythmias (80 %); ventricular fibrillation, often within 4 h and preceded by PVCs/VT','Heart failure; sinus bradycardia','Pericarditis; atrial fibrillation','Cardiogenic shock; first-degree AV block']},
+  {t:'ACS & MI',q:'Day 3 post-MI: new apical systolic murmur radiating to the axilla. What is happening?',
+   a:'Papillary muscle dysfunction/rupture → mitral regurgitation.',
+   o:['Papillary muscle dysfunction/rupture → mitral regurgitation','Dressler syndrome (late pericarditis)','Aortic stenosis','Left ventricular aneurysm'],n:'Pericarditis causes a friction rub, not a murmur. Radiation to the axilla points to the mitral valve.'},
+  {t:'Chest tubes',q:'A chest tube drains 1.8 L in the first hour. What do you do?',
+   a:'Clamp and call the physician.',
+   o:['Clamp and call the physician','Milk the tube to keep it patent','Record it and recheck in 1 h; this is normal after surgery','Raise the drainage system above the chest'],n:'This is the answer from the course slides. Always follow your agency\'s chest tube policy.'},
+  {t:'Chest tubes',q:'What does continuous bubbling in the water-seal chamber mean?',
+   a:'Air leak: check connections and the dressing, and report.',
+   o:['An air leak: check connections/dressing and report','Normal tidal fluctuation','The suction is working correctly','The tube is kinked'],n:'Gentle continuous bubbling in the suction-control chamber is normal. In the water-seal chamber, it means an air leak.'},
+  {t:'Chest tubes',q:'What is the most common cause of a transudative effusion? Of an exudative effusion?',
+   a:'Transudative: heart failure. Exudative: pneumonia (also cancer, PE, viral, TB).',
+   o:['Transudative: heart failure; exudative: pneumonia','Transudative: pneumonia; exudative: heart failure','Transudative: cancer; exudative: cirrhosis','Transudative: TB; exudative: nephrotic syndrome']},
+  {t:'CABG',q:'Why is Mrs S on amlodipine after CABG?',
+   a:'Vasodilator and anti-spasmodic for arterial (radial) grafts; also treats HTN.',
+   o:['Vasodilator and anti-spasmodic for arterial (radial) grafts; also treats HTN','Rate control for atrial fibrillation','Lowers cholesterol to keep the grafts open','Anticoagulant to prevent graft thrombosis']},
+  {t:'Pericarditis',q:'Pain is sharp, worse lying flat, relieved by leaning forward, with a friction rub and diffuse ST↑. What is the diagnosis and treatment?',
+   a:'Pericarditis: colchicine ≥3 months (watch for diarrhea) + high-dose ASA/ibuprofen with a PPI; restrict strenuous activity; follow-up in 4 weeks.',
+   o:['Pericarditis: colchicine ≥3 mo + high-dose ASA/ibuprofen with a PPI; limit strenuous activity','STEMI: emergency PCI, IV heparin and a nitroglycerin infusion','Pericarditis: IV antibiotics and strict bed rest for 2 weeks, then a stress test','Pleurisy: corticosteroids only']},
+  {t:'Atrial fibrillation',q:'Explain "irregularly irregular" in AF.',
+   a:'The atria fire up to 600/min; the AV node is refractory to most impulses → haphazard ventricular conduction.',
+   o:['The atria fire up to 600/min and the AV node is refractory to most impulses → haphazard ventricular conduction','The ventricles fire randomly from several ectopic foci','The SA node fires at irregular intervals','The atria fire regularly at 300/min with a fixed 2:1 block'],n:'A regular atrial rate of ~300/min with fixed block is atrial flutter, not AF.'},
+  {t:'Atrial fibrillation',q:'Calculate CHADS₂ for a 76-year-old with HTN and a prior TIA.',
+   a:'Age 1 + HTN 1 + stroke/TIA 2 = 4 → 8.5 %/yr (elevated) → anticoagulate.',
+   o:['4 (age 1 + HTN 1 + stroke/TIA 2) → 8.5 %/yr → anticoagulate','3 (age 1 + HTN 1 + TIA 1) → ASA alone','2 (TIA does not count) → no treatment','5 (age ≥75 counts 2) → 12.5 %/yr']},
+  {t:'Atrial fibrillation',q:'Why was Mrs S\'s ASA stopped when the DOAC started?',
+   a:'↑ Bleeding risk with three agents and no added benefit.',
+   o:['↑ Bleeding risk with three agents and no added benefit','ASA inactivates the DOAC','ASA cannot be given with amlodipine','The grafts had healed, so antiplatelets were no longer needed']},
+  {t:'Atrial fibrillation',q:'Which modifiable risk factors cause >50 % of the AF burden?',
+   a:'Obesity, HTN, diabetes, smoking, alcohol (ETOH), previous CV disease.',
+   o:['Obesity, HTN, diabetes, smoking, alcohol, previous CV disease','Age, male sex, family history','Caffeine, stress, dehydration','Genetics, hypothyroidism, age']},
+  ]
+}];
+
+EXAMS.push({
+  id:'cardiac-cases', title:'Acute Cardiac Illness: Situational Exam', course:'NUR 323/623',
+  desc:'Six unfolding patient cases: STEMI in the ED, post-PCI care, new AF, post-CABG chest tubes, pericarditis turning into tamponade, and newly diagnosed hypertension. Some questions are select-all-that-apply.',
+  cases:{
+    A:{title:'Case 1 · Mr. Tremblay, chest pain in the ED',text:'Mr. Tremblay, 58, smokes and has type 2 diabetes. He arrives at triage at 07:40 with crushing substernal pressure radiating to his left jaw for 40 minutes, with sweating and nausea. BP 152/94, HR 108, RR 22, SpO₂ 95 % on room air.'},
+    B:{title:'Case 2 · Mrs. Bouchard, after PCI',text:'Mrs. Bouchard, 66, had a stent placed 2 hours ago through the right femoral artery. The sheath has been removed and manual pressure held. She is on ASA and ticagrelor.'},
+    C:{title:'Case 3 · Mrs. Nguyen, new atrial fibrillation',text:'Mrs. Nguyen, 72, has hypertension treated with amlodipine. She comes in with palpitations and fatigue that started 2 days ago. Pulse is irregularly irregular at 132, BP 118/76. The ECG shows no P waves and an irregular narrow-complex rhythm.'},
+    D:{title:'Case 4 · Mr. Lévesque, day 1 after CABG',text:'Mr. Lévesque, 64, is on post-op day 1 after CABG ×3 (LIMA and a radial artery graft). He has a mediastinal chest tube and a left pleural chest tube connected to −20 cm H₂O suction.'},
+    E:{title:'Case 5 · Ms. Ahmed, sharp chest pain',text:'Ms. Ahmed, 34, had a viral illness 2 weeks ago. She now has sharp chest pain that is worse lying flat and when she breathes in, and better when she sits up and leans forward. You hear a friction rub. The ECG shows diffuse ST elevation with PR depression. Troponin is normal.'},
+    F:{title:'Case 6 · Mr. Okafor, newly diagnosed hypertension',text:'Mr. Okafor, 49, smokes and has a BMI of 33. His automated office BP averages 146/92 and a 7-day home series averages 142/90. He has no diabetes or kidney disease.'},
+  },
+  qs:[
+  {c:'A',t:'ACS & MI',q:'How soon after arrival should Mr. Tremblay have a 12-lead ECG?',
+   a:'Within 10 minutes of arrival (first medical contact).',
+   o:['Within 10 minutes of arrival','Within 30 minutes of arrival','Within 60 minutes of arrival','Once the first troponin result is back']},
+  {c:'A',t:'ACS & MI',q:'The ECG shows 3 mm ST elevation in V1–V4. Which wall and which artery are most likely involved?',
+   a:'Anterior wall (anteroseptal): left anterior descending (LAD) artery.',
+   o:['Anterior wall: left anterior descending (LAD)','Inferior wall: right coronary artery (RCA)','Lateral wall: circumflex artery','Posterior wall: posterior descending artery']},
+  {c:'A',t:'ACS & MI',k:4,q:'Select all the orders you anticipate right away for Mr. Tremblay.',
+   a:'ASA 160–325 mg chewed; sublingual NTG 0.4 mg if SBP ≥ 90 and no recent PDE-5 inhibitor; IV access and continuous cardiac monitoring; activate the cath lab for primary PCI (door-to-balloon ≤ 90 min). No routine O₂ at SpO₂ 95 %, and do not wait for troponin when the ECG shows STEMI.',
+   o:['ASA 160–325 mg, chewed and swallowed','Sublingual nitroglycerin 0.4 mg if SBP ≥ 90 mmHg','IV access and continuous cardiac monitoring','Activate the cath lab for primary PCI','O₂ 10 L/min by face mask','Wait for the troponin result before calling cardiology']},
+  {c:'A',t:'ACS & MI',q:'Before you give the nitroglycerin, Mr. Tremblay tells you he took tadalafil (Cialis) last night. What do you do?',
+   a:'Hold the nitroglycerin and tell the physician. Nitrates within 48 h of tadalafil (24 h for sildenafil/vardenafil) can cause severe, refractory hypotension.',
+   o:['Hold the nitroglycerin and tell the physician','Give half the usual dose and recheck BP in 5 minutes','Give it as ordered, since it was taken more than 12 hours ago','Give it and start IV fluids at the same time']},
+  {c:'A',t:'ACS & MI',q:'If PCI were not available within 120 minutes, fibrinolysis would be considered. Which part of his history would be an absolute contraindication?',
+   a:'Any previous intracranial hemorrhage (also: ischemic stroke within 3 months, active bleeding, suspected aortic dissection, known intracranial lesion).',
+   o:['An intracranial hemorrhage 2 years ago','Type 2 diabetes','Hypertension controlled on ramipril','Age 58']},
+  {c:'A',t:'ACS & MI',q:'On the way to the cath lab the monitor shows frequent PVCs, then a chaotic waveform. He is unresponsive with no pulse. What comes first?',
+   a:'Call a code, start CPR and defibrillate as soon as the defibrillator is ready (VF is shocked unsynchronized).',
+   o:['Call a code, start CPR and defibrillate as soon as possible','Give IV amiodarone, then reassess','Do a synchronized cardioversion','Get a 12-lead ECG to confirm the rhythm']},
+
+  {c:'B',t:'PCI care',k:3,q:'Select all the routine nursing actions for Mrs. Bouchard after femoral sheath removal.',
+   a:'Keep the right leg straight with HOB ≤ 30° for the ordered time; check the site, distal pulses, colour, warmth and sensation per protocol (e.g. q15 min ×4, q30 min ×4, then hourly); teach her to press on the site when she coughs or sneezes and to call if she feels warmth or wetness.',
+   o:['Keep the right leg straight with the head of bed at 30° or less','Check the site, distal pulses, colour, warmth and sensation per protocol','Teach her to press on the site when coughing and to call if she feels wetness','Help her walk to the bathroom 1 hour after sheath removal','Have her bend the hip regularly to prevent stiffness']},
+  {c:'B',t:'PCI care',q:'You find new swelling and fresh bleeding at the groin site. What is your first action?',
+   a:'Apply firm manual pressure just above the puncture site (over the artery) and call for help. Then check vital signs and distal pulses and notify the physician.',
+   o:['Apply firm manual pressure just above the puncture site and call for help','Elevate the leg on two pillows','Remove the dressing to look at the site, then document','Apply an ice pack and recheck in 1 hour']},
+  {c:'B',t:'PCI care',q:'Four hours later her right foot is cool and pale, and the pedal pulse is only faintly heard by Doppler (it was palpable before). What do you suspect?',
+   a:'Arterial occlusion (thrombus or embolus) in the affected leg. Notify the physician immediately.',
+   o:['Arterial occlusion of the right leg: notify the physician immediately','An expected finding after sheath removal','A retroperitoneal bleed','Venous congestion: elevate the leg and recheck in 1 hour']},
+  {c:'B',t:'PCI care',q:'What is the most important discharge teaching about her ASA and ticagrelor?',
+   a:'Never stop either antiplatelet unless the cardiologist says so. Stopping early can cause stent thrombosis and an MI.',
+   o:['Never stop either antiplatelet unless the cardiologist says so','Stop the ticagrelor if you notice bruising','Take them only on days you have chest pain','If you miss a dose, take a double dose the next day']},
+
+  {c:'C',t:'Atrial fibrillation',q:'What rhythm does Mrs. Nguyen have?',
+   a:'Atrial fibrillation with a rapid ventricular response.',
+   o:['Atrial fibrillation with rapid ventricular response','Atrial flutter with 2:1 block','Sinus tachycardia','Ventricular tachycardia']},
+  {c:'C',t:'Atrial fibrillation',q:'Her AF started about 2 days ago. Why isn\'t she cardioverted right away?',
+   a:'AF lasting ≥ 48 h (or of unknown duration) may have formed a clot in the left atrium. She needs ≥ 3 weeks of anticoagulation, or a TEE to rule out a clot, before elective cardioversion, and anticoagulation for at least 4 weeks after.',
+   o:['A left atrial clot may have formed, so she needs anticoagulation (or a TEE) first','Cardioversion is only used for ventricular fibrillation','Her BP is too low for cardioversion','She must be given digoxin before any cardioversion']},
+  {c:'C',t:'Atrial fibrillation',q:'Using the CCS "CHADS-65" approach, does Mrs. Nguyen need oral anticoagulation?',
+   a:'Yes. Age ≥ 65 alone is enough. A DOAC is preferred over warfarin, and ASA is not recommended for stroke prevention in AF.',
+   o:['Yes: age 65 or older alone means oral anticoagulation, and a DOAC is preferred','No: ASA 81 mg daily is enough','Only if she has already had a stroke or TIA','Only if her CHADS₂ score is 4 or more']},
+  {c:'C',t:'Atrial fibrillation',k:4,q:'She starts apixaban. Select all the correct teaching points.',
+   a:'Report black stools, blood in urine, or bleeding gums; never skip doses, since protection wears off within about a day; use a soft toothbrush and an electric razor; tell dentists and surgeons she takes it. Weekly INR and a consistent vitamin K intake apply to warfarin, not apixaban.',
+   o:['Report black stools, blood in the urine or bleeding gums','Don\'t skip doses, because the protection wears off within about a day','Use a soft toothbrush and an electric razor','Tell your dentist and any surgeon that you take it','You will need weekly INR blood tests','Keep your vitamin K intake the same every day']},
+  {c:'C',t:'Atrial fibrillation',q:'Metoprolol is ordered for rate control. Before the dose her apical pulse is 52 and BP 92/60. What do you do?',
+   a:'Hold the dose and notify the prescriber (bradycardia and low BP).',
+   o:['Hold the dose and notify the prescriber','Give it and recheck the pulse in 1 hour','Give half the dose','Give it with a 500 mL fluid bolus']},
+
+  {c:'D',t:'Chest tubes',q:'Mr. Lévesque\'s mediastinal tube drained 120 mL/h for 2 hours, then suddenly stopped. BP is now 88/50, HR 124, his neck veins are distended and his heart sounds are muffled. What is happening?',
+   a:'Cardiac tamponade, likely from a clotted mediastinal tube. This is an emergency: notify the surgeon immediately and prepare for re-exploration or pericardiocentesis.',
+   o:['Cardiac tamponade from a clotted tube: notify the surgeon immediately','A good sign: the bleeding has stopped','Left pneumothorax','Post-op pericarditis: give ibuprofen']},
+  {c:'D',t:'Chest tubes',q:'The pleural tube accidentally disconnects from the drainage unit. What is your first action?',
+   a:'Restore the water seal: put the end of the chest tube 2–3 cm under sterile water or saline while a new system is set up, then assess his breathing and notify. Do not leave the tube clamped (risk of tension pneumothorax). Follow your agency\'s policy.',
+   o:['Put the end of the tube 2–3 cm under sterile water, then get a new system','Clamp the tube for an hour until a new system arrives','Leave the tube open to air and call the physician','Push the tube further into the chest']},
+  {c:'D',t:'Chest tubes',q:'The pleural tube is pulled out of his chest. What do you do?',
+   a:'Cover the site right away with a sterile occlusive dressing taped on 3 sides (lets air escape), notify the physician, and watch for signs of pneumothorax.',
+   o:['Cover the site with an occlusive dressing taped on 3 sides and notify','Tape an occlusive dressing tightly on all 4 sides','Reinsert the tube with sterile technique','Leave the site uncovered so air can escape']},
+  {c:'D',t:'Chest tubes',q:'Tidaling in the pleural water-seal chamber has stopped and there is no bubbling. What does it mean?',
+   a:'Either the tubing is kinked or blocked by a clot, or the lung has re-expanded. Check the tubing first (kinks, dependent loops), then assess breath sounds and report.',
+   o:['The tubing is kinked or clotted, or the lung has re-expanded: check the tubing first','There is an air leak in the system','The suction is set too high','It is a normal finding that needs no assessment']},
+  {c:'D',t:'CABG',q:'What best prevents pulmonary complications on post-op day 1?',
+   a:'Pain control that allows splinted deep breathing and coughing, incentive spirometry every hour while awake, and early mobilization.',
+   o:['Good pain control, splinted coughing, incentive spirometry hourly and early mobilization','Flat bed rest for 48 hours','Holding analgesics so he stays alert enough to breathe deeply','Suctioning every 2 hours whether or not he needs it']},
+
+  {c:'E',t:'Pericarditis',q:'Which position will make Ms. Ahmed most comfortable?',
+   a:'Sitting up and leaning forward (e.g. over the bedside table).',
+   o:['Sitting up, leaning forward over the bedside table','Flat on her back','Left lateral with legs bent','Trendelenburg']},
+  {c:'E',t:'Pericarditis',q:'Which statement shows she understands her treatment?',
+   a:'Colchicine for at least 3 months (report diarrhea) plus high-dose ASA/NSAID with a PPI, avoiding strenuous exercise until symptoms resolve and markers normalize.',
+   o:['"I\'ll take the colchicine for 3 months and tell you if I get diarrhea."','"I can stop the colchicine once the pain is gone in a couple of days."','"I\'ll go back to my CrossFit class tomorrow."','"I\'ll take the ibuprofen on an empty stomach so it works faster."']},
+  {c:'E',t:'Pericarditis',q:'On day 2 her systolic BP drops 20 mmHg when she breathes in, her neck veins are distended and her heart sounds are muffled. What is happening?',
+   a:'Cardiac tamponade (pulsus paradoxus + Beck\'s triad). Notify the physician immediately, give O₂ and IV fluids as ordered, and prepare for an echo and pericardiocentesis.',
+   o:['Cardiac tamponade: notify immediately and prepare for pericardiocentesis','Dressler syndrome','Worsening pericarditis: increase the ibuprofen','Anxiety: coach slow breathing']},
+  {c:'E',t:'Pericarditis',q:'How does her pain differ from typical MI pain?',
+   a:'Pericarditis pain is sharp, pleuritic and positional (worse lying flat, relieved leaning forward). MI pain is pressure-like and is not changed by position or breathing.',
+   o:['Pericarditis pain is sharp and positional, relieved by leaning forward; MI pain is pressure that position doesn\'t change','Pericarditis pain is relieved by nitroglycerin; MI pain is not','MI pain is sharp and worse with breathing; pericarditis is a dull pressure','There is no difference; only troponin can tell them apart']},
+
+  {c:'F',t:'Hypertension',q:'According to Hypertension Canada\'s 2025 primary-care guideline, what is the best initial approach for Mr. Okafor?',
+   a:'Confirmed hypertension at ≥ 140/90: lifestyle changes (quit smoking, weight loss, DASH-style diet, less sodium, activity) plus a low-dose single-pill combination: ACE inhibitor or ARB with a thiazide-like diuretic or a long-acting dihydropyridine CCB.',
+   o:['Lifestyle changes plus a low-dose single-pill combination (ACEi/ARB + thiazide-like diuretic or long-acting CCB)','Lifestyle changes alone for one year, then recheck','A beta blocker alone','No treatment until his BP reaches 160/100'],n:'This follows the 2025 Hypertension Canada guideline. Your course slides may still use older thresholds; go with your instructor\'s version on the exam.'},
+  {c:'F',t:'Hypertension',q:'What systolic BP target does the 2025 guideline set if he tolerates it?',
+   a:'Systolic below 130 mmHg.',
+   o:['Systolic below 130 mmHg','Below 140/90 mmHg','Below 150/90 mmHg','Below 110/70 mmHg']},
+  {c:'F',t:'Hypertension',q:'Two weeks after starting ramipril/indapamide, his lips and tongue swell. What do you do?',
+   a:'Angioedema is an emergency: assess and protect the airway, call for help, stop the ACE inhibitor and never restart it (or any ACE inhibitor).',
+   o:['Treat it as an emergency: protect the airway, call for help, stop the ramipril for good','Give an antihistamine and continue both drugs','Reassure him: this is a common, harmless side effect','Switch him to another ACE inhibitor']},
+  {c:'F',t:'Hypertension',q:'Which labs should be checked 1–2 weeks after starting ramipril/indapamide?',
+   a:'Potassium, sodium and creatinine (eGFR).',
+   o:['Potassium, sodium and creatinine','Troponin','INR','TSH']},
+  ]
+});
+
+const examById = id => EXAMS.find(x=>x.id===id);
+const isRight = (q,a) => q.k ? Array.isArray(a) && a.length===q.k && a.every(x=>x<q.k) : a===0;
+const isKey = (q,o) => q.k ? o<q.k : o===0;
+const hasAns = (r,i) => r.mode==='mc' ? (Array.isArray(r.ans[i]) ? r.ans[i].length>0 : r.ans[i]!=null) : !!(r.ans[i]||'').trim();
+const picked = (a,o) => Array.isArray(a) ? a.includes(o) : a===o;
+const LET = 'ABCDEFGH';
+function caseHead(ex, q, prev){ if(!q.c || (prev && prev.c===q.c)) return ''; const cs=ex.cases[q.c]; return `<div class="case"><span class="label">${esc(cs.title)}</span><p>${esc(cs.text)}</p></div>`; }
+const EXAM_KEY = 'nss-exam-draft';
+const shuffle = a => { a=a.slice(); for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; };
+function examStart(id, mode, only){
+  const ex = examById(id);
+  const idx = only && only.length ? only : ex.qs.map((_,i)=>i);
+  const run = {id, mode, idx, ord:{}, ans:{}, start:Date.now(), submitted:false, marks:{}, ai:{}};
+  idx.forEach(i => run.ord[i] = shuffle(ex.qs[i].o.map((_,k)=>k)));
+  viewState.exam = run; lsSet(EXAM_KEY, run); render(); window.scrollTo(0,0);
+}
+function examAnswered(r){ return r.idx.filter(i => hasAns(r,i)).length; }
+function examScore(r){
+  const ex = examById(r.id);
+  if (r.mode==='mc') return r.idx.reduce((s,i)=>s+(isRight(ex.qs[i],r.ans[i])?1:0),0);
+  return r.idx.reduce((s,i)=>s+(r.marks[i]??0),0);
+}
+function examMissed(r){ const ex=examById(r.id); return r.idx.filter(i => r.mode==='mc' ? !isRight(ex.qs[i],r.ans[i]) : (r.marks[i]??0) < 1); }
+function examSave(){
+  const r = viewState.exam, ex = examById(r.id);
+  const score = examScore(r), total = r.idx.length;
+  const it = put({id:r.attemptId, kind:'attempt', exam:r.id, title:ex.title, mode:r.mode, score, total, pct:Math.round(score/total*100), missed:examMissed(r), mins:Math.max(1,Math.round((Date.now()-r.start)/60000)), date:todayISO(), at:r.attemptAt||(r.attemptAt=Date.now())});
+  r.attemptId = it.id;
+}
+
+V.exams = () => {
+  if (viewState.cheat) return examCheat(examById(viewState.cheat));
+  const r = viewState.exam;
+  if (r) return r.submitted ? examResults(r) : examTake(r);
+  const atts = all('attempt').sort((a,b)=>b.at-a.at);
+  return `
+  <div class="head"><div><h1>Exams</h1><p class="muted">Practice exams you fill in online. Get your score, see every answer explained, and send the ones you missed to Flashcards.</p></div></div>
+  ${EXAMS.map(ex => {
+    const mine = atts.filter(a=>a.exam===ex.id), best = mine.length ? Math.max(...mine.map(a=>a.pct)) : null;
+    const topics = [...new Set(ex.qs.map(q=>q.t))];
+    return `<div class="card exam-card">
+      <div class="row between"><div class="row" style="gap:6px"><span class="chip accent">${esc(ex.course)}</span>${ex.cases?`<span class="chip">${Object.keys(ex.cases).length} patient cases</span>`:''}</div><span class="small muted">${ex.qs.length} questions · ${mine.length ? `best ${best} % · ${mine.length} attempt${mine.length===1?'':'s'}` : 'not taken yet'}</span></div>
+      <h2>${esc(ex.title)}</h2><p class="muted">${esc(ex.desc)}</p>
+      <div class="pills">${topics.map(t=>`<span class="chip">${esc(t)} · ${ex.qs.filter(q=>q.t===t).length}</span>`).join('')}</div>
+      <div class="mode-grid">
+        <button class="mode" data-act="exam-start" data-id="${ex.id}" data-m="mc"><b>Multiple choice</b><span class="small muted">Pick one answer per question. Scored instantly.</span></button>
+        <button class="mode" data-act="exam-start" data-id="${ex.id}" data-m="written"><b>Written</b><span class="small muted">Type your answer like on the real exam, then compare with the answer key.</span></button>
+      </div>
+      <div class="row"><button class="btn sm" data-act="exam-cheat" data-id="${ex.id}">${I.notes} Answer cheat sheet</button></div>
+    </div>`; }).join('')}
+  <div class="card"><h2>Past attempts</h2>
+    ${atts.length ? `<div class="list">${atts.slice(0,15).map(a=>`<div class="li"><span class="score-dot ${a.pct>=80?'ok':a.pct>=60?'mid':'low'}">${a.pct}%</span><div class="grow"><div class="t">${esc(a.title)}</div><div class="tiny muted">${a.mode==='mc'?'Multiple choice':'Written'} · ${a.score}/${a.total} · ${a.mins} min · ${fmtDate(a.date)}</div></div>
+      ${a.missed?.length ? `<button class="btn sm" data-act="exam-retry" data-id="${a.id}">Retry ${a.missed.length} missed</button>` : ''}
+      <button class="iconbtn" aria-label="Delete attempt" data-act="del" data-id="${a.id}">${I.trash}</button></div>`).join('')}</div>`
+    : `<div class="empty small">Your scores show up here after you submit an exam.</div>`}
+  </div>`;
+};
+function examTake(r){
+  const ex = examById(r.id), n = examAnswered(r), total = r.idx.length;
+  return `
+  <div class="head"><div><span class="label">${r.mode==='mc'?'Multiple choice':'Written'} · ${esc(ex.course)}</span><h1>${esc(ex.title)}</h1><p class="muted">Answer every question, then submit at the bottom. Your answers are saved as you go.</p></div>
+    <div class="row"><button class="btn sm" data-act="exam-cheat" data-id="${r.id}">${I.notes} Cheat sheet</button><button class="btn sm ghost" data-act="exam-quit">Leave exam</button></div></div>
+  <div class="exam-progress" aria-live="polite"><div class="bar-track"><i id="ex-bar" style="width:${n/total*100}%"></i></div><span class="small muted" id="ex-count">${n} of ${total} answered</span></div>
+  <form id="exam-form" class="stack" style="gap:16px">
+  ${r.idx.map((i,k) => { const q = ex.qs[i]; return `${caseHead(ex, q, k ? ex.qs[r.idx[k-1]] : null)}
+    <fieldset class="card q" id="q-${i}"><legend class="sr">Question ${k+1}</legend>
+      <div class="row between"><span class="qnum">Question ${k+1}</span><span class="chip">${esc(q.t)}</span></div>
+      <p class="qtext">${esc(q.q)}</p>${q.k && r.mode==='mc' ? '<p class="small muted">Select all that apply.</p>' : ''}
+      ${r.mode==='mc'
+        ? `<div class="opts">${r.ord[i].map((o,j)=>`<label class="opt ${q.k?'multi':''}"><input type="${q.k?'checkbox':'radio'}" name="q${i}" value="${o}" data-q="${i}" ${picked(r.ans[i],o)?'checked':''}><span class="ol">${LET[j]}</span><span>${esc(q.o[o])}</span></label>`).join('')}</div>`
+        : `<textarea rows="3" id="ta-${i}" data-q="${i}" placeholder="Type your answer…" aria-label="Answer to question ${k+1}">${esc(r.ans[i]||'')}</textarea>`}
+    </fieldset>`; }).join('')}
+    <div class="card submit-bar"><div class="row between"><span class="small muted" id="ex-count2">${n} of ${total} answered</span>
+      <button class="btn primary" type="submit">Submit exam</button></div></div>
+  </form>`;
+}
+function examResults(r){
+  const ex = examById(r.id), total = r.idx.length, score = examScore(r), pct = Math.round(score/total*100);
+  const missed = examMissed(r), needMarks = r.mode==='written' && r.idx.some(i=>r.marks[i]==null);
+  const byTopic = {}; r.idx.forEach(i=>{ const t=ex.qs[i].t; byTopic[t]=byTopic[t]||[0,0]; byTopic[t][1]++; byTopic[t][0]+= r.mode==='mc' ? (isRight(ex.qs[i],r.ans[i])?1:0) : (r.marks[i]??0); });
+  return `
+  <div class="head"><div><span class="label">Results</span><h1>${esc(ex.title)}</h1></div><button class="btn sm" data-act="exam-done">Back to exams</button></div>
+  <div class="grid-2">
+    <div class="card"><div class="row" style="gap:18px">
+      <div class="score-ring ${pct>=80?'ok':pct>=60?'mid':'low'}" style="--p:${pct}"><span>${needMarks?'—':pct+'%'}</span></div>
+      <div class="stack" style="gap:4px"><span class="stat">${needMarks?'Mark your answers':`${+score.toFixed(1)} / ${total}`}</span>
+        <span class="muted small">${needMarks ? 'Compare each answer with the key below and mark it, or let AI mark them for you.' : pct>=80 ? 'Strong work. Review the few you missed.' : pct>=60 ? 'Getting there. Focus on the topics below.' : 'Good start. Go through the explanations and retry what you missed.'}</span></div></div>
+      <div class="row">
+        ${needMarks ? `<button class="btn primary" data-act="exam-ai" ${viewState.examAiBusy?'disabled':''}>${viewState.examAiBusy?'<span class="spin"></span> Marking…':I.assistant+' Mark with AI'}</button>` : ''}
+        ${!needMarks && missed.length ? `<button class="btn primary" data-act="exam-retry-now">Retry ${missed.length} missed</button><button class="btn" data-act="exam-cards">${I.cards} Missed → flashcards</button>` : ''}
+        <button class="btn" data-act="exam-start" data-id="${r.id}" data-m="${r.mode}">Retake all</button></div>
+    </div>
+    <div class="card"><h2>By topic</h2><table class="ref-table"><tbody>${Object.entries(byTopic).map(([t,[s,n]])=>`<tr><td>${esc(t)}</td><td>${needMarks?'—':`${+s.toFixed(1)}/${n}`}</td></tr>`).join('')}</tbody></table></div>
+  </div>
+  ${r.idx.map((i,k) => { const q = ex.qs[i];
+    const ok = r.mode==='mc' ? isRight(q,r.ans[i]) : r.marks[i]===1, part = r.mode==='written' && r.marks[i]===0.5, unmarked = r.mode==='written' && r.marks[i]==null;
+    const cls = unmarked ? '' : ok ? 'right' : part ? 'part' : 'wrong';
+    return `${caseHead(ex, q, k ? ex.qs[r.idx[k-1]] : null)}<div class="card q review ${cls}">
+      <div class="row between"><span class="qnum">Question ${k+1}</span><span class="verdict">${unmarked?'Not marked':ok?'Correct':part?'Partly correct':'Missed'}</span></div>
+      <p class="qtext">${esc(q.q)}</p>
+      ${r.mode==='mc'
+        ? `<div class="opts">${r.ord[i].map((o,j)=>{ const key=isKey(q,o), pk=picked(r.ans[i],o); return `<div class="opt ${key?'is-key':''} ${pk&&!key?'is-wrong':''}"><span class="ol">${LET[j]}</span><span>${esc(q.o[o])}</span>${key?`<span class="tag">${pk?'✓ Answer':'Answer'}</span>`:pk?'<span class="tag">Your pick</span>':''}</div>`; }).join('')}</div>
+           ${!hasAns(r,i)?'<p class="small muted">Not answered.</p>':''}`
+        : `<div class="yours"><span class="label">Your answer</span><p>${r.ans[i]?esc(r.ans[i]):'<span class="muted">Not answered.</span>'}</p></div>`}
+      <div class="key"><span class="label">Answer key</span><p>${esc(q.a)}</p>${q.n?`<p class="small muted">${esc(q.n)}</p>`:''}</div>
+      ${r.ai[i]?`<p class="small"><b>AI feedback:</b> ${esc(r.ai[i])}</p>`:''}
+      ${r.mode==='written' ? `<div class="pills">${[[1,'Got it'],[0.5,'Partly'],[0,'Missed']].map(([v,l])=>`<button class="pill" aria-pressed="${r.marks[i]===v}" data-act="exam-mark" data-q="${i}" data-v="${v}">${l}</button>`).join('')}</div>` : ''}
+    </div>`; }).join('')}`;
+}
+function examCheat(ex){
+  const back = viewState.exam && viewState.exam.id===ex.id && !viewState.exam.submitted ? 'Back to exam' : viewState.exam ? 'Back' : 'Back to exams';
+  return `
+  <div class="head"><div><span class="label">Answer cheat sheet · ${esc(ex.course)}</span><h1>${esc(ex.title)}</h1><p class="muted">Every question with its correct answer and explanation. Study it before the exam, or peek when you're stuck.</p></div>
+    <button class="btn sm" data-act="cheat-close">${back}</button></div>
+  <div class="card cheat">${ex.qs.map((q,i)=>`${caseHead(ex,q,i?ex.qs[i-1]:null)}
+    <div class="cheat-q"><span class="qnum">${i+1}</span><div class="stack" style="gap:6px"><p class="qtext">${esc(q.q)}</p>
+      <ul class="cheat-ans">${q.o.filter((_,o)=>isKey(q,o)).map(t=>`<li>${esc(t)}</li>`).join('')}</ul>
+      <p class="small">${esc(q.a)}</p>${q.n?`<p class="small muted">${esc(q.n)}</p>`:''}</div></div>`).join('')}</div>`;
+}
+async function examAiMark(){
+  const r = viewState.exam, ex = examById(r.id);
+  if (!S.sample){ toast('AI marking needs claude.ai while signed in. Mark them yourself below.'); return; }
+  viewState.examAiBusy = true; render();
+  const items = r.idx.map(i=>({id:i, question:ex.qs[i].q, key:ex.qs[i].a, student:(r.ans[i]||'').trim()||'(blank)'}));
+  try{
+    const out = await S.sample.json(`${SYSTEM}\n\nYou are marking a nursing student's written exam answers against the answer key. For each item give score 1 (all key points present, wording can differ), 0.5 (partly right or missing a key point) or 0 (wrong or blank), plus one short sentence of feedback naming what was missing. Be fair, not picky about wording. Return only JSON: {"marks":[{"id":0,"score":1,"feedback":"..."}]}\n\n${JSON.stringify(items)}`);
+    (out?.marks||[]).forEach(m => { if (r.idx.includes(+m.id) && [0,0.5,1].includes(+m.score)){ r.marks[+m.id]=+m.score; r.ai[+m.id]=m.feedback||''; } });
+    if (r.idx.every(i=>r.marks[i]!=null)){ examSave(); toast('Marked. You can change any mark below.'); }
+    else toast('Some answers were not marked. Mark the rest yourself.');
+  }catch(e){ toast(e?.code==='not_granted' ? 'AI was not allowed for this page.' : 'Could not mark with AI. Mark them yourself below.'); }
+  viewState.examAiBusy = false; lsSet(EXAM_KEY, r); render();
+}
+function examProgress(){
+  const r = viewState.exam; const n = examAnswered(r), total = r.idx.length;
+  const b=$('#ex-bar'); if(b) b.style.width = (n/total*100)+'%';
+  ['#ex-count','#ex-count2'].forEach(s=>{ const el=$(s); if(el) el.textContent = `${n} of ${total} answered`; });
+  lsSet(EXAM_KEY, r);
+}
+viewState.exam = (()=>{ const d = lsGet(EXAM_KEY, null); return d && examById(d.id) && !d.submitted ? d : null; })();
+
+/* ----- toolkit ----- */
+const VITALS = [['Heart rate','60–100 bpm'],['Respiratory rate','12–20 /min'],['Blood pressure','< 120/80 mmHg (normal)'],['Temperature (oral)','36.5–37.5 °C'],['SpO₂','95–100 % (often 88–92 % target in COPD per order)'],['Pain','0–10 scale; reassess after intervention']];
+const LABS = [['Sodium (Na⁺)','135–145 mmol/L'],['Potassium (K⁺)','3.5–5.0 mmol/L'],['Chloride (Cl⁻)','98–106 mmol/L'],['Calcium, total','2.10–2.60 mmol/L'],['Magnesium','0.70–1.00 mmol/L'],['Glucose, fasting','4.0–6.0 mmol/L'],['HbA1c','< 6.0 % (non-diabetic)'],['Creatinine','~50–110 µmol/L (varies by sex)'],['Urea (BUN)','2.5–8.0 mmol/L'],['Hemoglobin','F 120–160 · M 135–175 g/L'],['WBC','4.0–11.0 × 10⁹/L'],['Platelets','150–400 × 10⁹/L'],['INR (no anticoagulant)','0.8–1.2'],['Albumin','35–50 g/L']];
+V.toolkit = () => `
+  <div class="head"><div><h1>Clinical Toolkit</h1><p class="muted">Quick references and calculators for labs, clinicals and dosage exams.</p></div></div>
+  <div class="banner">Typical adult ranges for studying. Reference ranges differ by lab and agency; always use your institution's values and policies.</div>
+  <div class="grid">
+    <div class="card"><h2>Dosage calculator</h2>
+      <div class="pills">${[['dhq','Desired ÷ Have × Qty'],['ivrate','IV mL/h'],['drops','IV drops/min'],['weight','mg/kg']].map(([k,n])=>`<button class="pill" aria-pressed="${(viewState.calc||'dhq')===k}" data-act="calc" data-c="${k}">${n}</button>`).join('')}</div>
+      <div id="calc-body">${calcBody(viewState.calc||'dhq')}</div>
+    </div>
+    <div class="card"><h2>Adult vital signs</h2><table class="ref-table"><tbody>${VITALS.map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td></tr>`).join('')}</tbody></table></div>
+  </div>
+  <div class="card"><div class="row between"><h2>Common lab values (SI units)</h2><button class="btn sm" data-act="labs-cards">${I.cards} Add as flashcards</button></div>
+    <div class="tbl"><table class="ref-table"><thead><tr><th>Test</th><th>Typical adult range</th></tr></thead><tbody>${LABS.map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td></tr>`).join('')}</tbody></table></div></div>
+  <div class="grid">
+    <details class="card"><summary>SBAR handoff</summary>
+      <p><b>S</b>ituation: who you are, the patient, what's happening now.</p><p><b>B</b>ackground: diagnosis, relevant history, meds, allergies, code status.</p><p><b>A</b>ssessment: vitals, findings, what you think the problem is.</p><p><b>R</b>ecommendation: what you need and by when.</p>
+      <button class="btn sm" data-act="go-prompt" data-cat="Care plans &amp; clinical" data-i="1">${I.assistant} Practise with AI</button></details>
+    <details class="card"><summary>Rights of medication administration</summary>
+      <ul style="margin:0;padding-left:20px"><li>Right patient (2 identifiers)</li><li>Right drug</li><li>Right dose</li><li>Right route</li><li>Right time</li><li>Right documentation</li><li>Right reason</li><li>Right response / evaluation</li><li>Right to refuse</li><li>Right education</li></ul></details>
+    <details class="card"><summary>Glasgow Coma Scale</summary>
+      <table class="ref-table"><tbody><tr><td>Eye opening</td><td>1–4</td></tr><tr><td>Verbal response</td><td>1–5</td></tr><tr><td>Motor response</td><td>1–6</td></tr><tr><td><b>Total</b></td><td>3–15 · ≤ 8 severe</td></tr></tbody></table></details>
+    <details class="card"><summary>Head-to-toe order</summary>
+      <ol style="margin:0;padding-left:20px"><li>General survey, vitals, pain</li><li>Neuro (LOC, orientation, pupils)</li><li>HEENT</li><li>Cardiovascular (apical, pulses, cap refill, edema)</li><li>Respiratory (rate, effort, lung sounds)</li><li>Abdomen (inspect, auscultate, palpate)</li><li>GU (output, colour)</li><li>Musculoskeletal &amp; mobility</li><li>Skin (Braden, wounds, IV site)</li><li>Psychosocial</li></ol></details>
+  </div>`;
+function calcBody(k){
+  const n = (id,l,ph) => `<label class="f">${l}<input type="number" step="any" inputmode="decimal" id="${id}" placeholder="${ph}" data-calc="${k}"></label>`;
+  const f = {
+    dhq: `<div class="form-row">${n('c1','Desired dose','e.g. 500 mg')}${n('c2','Have (on hand)','e.g. 250 mg')}${n('c3','Quantity','e.g. 1 tab or 5 mL')}</div><p class="small muted">Dose = (Desired ÷ Have) × Quantity</p>`,
+    ivrate: `<div class="form-row">${n('c1','Volume (mL)','e.g. 1000')}${n('c2','Time (hours)','e.g. 8')}</div><p class="small muted">Rate = Volume ÷ Time</p>`,
+    drops: `<div class="form-row">${n('c1','Volume (mL)','e.g. 500')}${n('c2','Time (minutes)','e.g. 240')}${n('c3','Drop factor (gtt/mL)','10, 15, 20 or 60')}</div><p class="small muted">gtt/min = (Volume × Drop factor) ÷ Time in minutes</p>`,
+    weight: `<div class="form-row">${n('c1','Dose (mg/kg)','e.g. 15')}${n('c2','Weight (kg)','e.g. 22')}${n('c3','Doses per day (optional)','e.g. 4')}</div><p class="small muted">Dose = mg/kg × kg</p>`,
+  }[k];
+  return f + `<div class="calc-out" id="calc-out" aria-live="polite">—</div>`;
+}
+function runCalc(k){
+  const v = id => parseFloat($('#'+id)?.value);
+  const a=v('c1'), b=v('c2'), c=v('c3'); let out='—';
+  const r = x => Number.isFinite(x) ? (Math.round(x*100)/100).toString() : null;
+  if (k==='dhq' && a&&b&&c) out = r(a/b*c) + ' (same unit as quantity)';
+  if (k==='ivrate' && a&&b) out = r(a/b) + ' mL/h';
+  if (k==='drops' && a&&b&&c) out = Math.round(a*c/b) + ' gtt/min';
+  if (k==='weight' && a&&b) out = r(a*b) + ' mg per dose' + (c ? ` · ${r(a*b*c)} mg/day` : '');
+  $('#calc-out').textContent = out;
+}
+
+/* ----- focus timer ----- */
+const T = { mode:'focus', len:25*60, left:25*60, running:false, iv:null, start:null };
+V.focus = () => {
+  const wk = weekMinutes(); const total = wk.reduce((s,d)=>s+d.m,0);
+  const C = 2*Math.PI*96, frac = T.left/T.len;
+  return `
+  <div class="head"><div><h1>Focus Timer</h1><p class="muted">Study in focused blocks. Finished sessions count toward your week.</p></div></div>
+  <div class="grid-2">
+    <div class="card" style="align-items:center;text-align:center">
+      <div class="pills" style="justify-content:center">${[['focus','Focus 25'],['long','Deep 50'],['break','Break 5']].map(([k,n])=>`<button class="pill" aria-pressed="${T.mode===k}" data-act="tmode" data-m="${k}">${n}</button>`).join('')}</div>
+      <div class="ring"><svg viewBox="0 0 220 220"><circle cx="110" cy="110" r="96" stroke="var(--surface2)" stroke-width="12" fill="none"/><circle id="ring-arc" cx="110" cy="110" r="96" stroke="var(--accent)" stroke-width="12" fill="none" stroke-linecap="round" stroke-dasharray="${C}" stroke-dashoffset="${C*(1-frac)}"/></svg><div class="time" id="t-time">${mmss(T.left)}</div></div>
+      <div class="row" style="justify-content:center"><button class="btn primary" data-act="tstart">${T.running?'Pause':'Start'}</button><button class="btn" data-act="treset">Reset</button></div>
+      <label class="f" style="width:100%;max-width:320px;text-align:left">Studying (optional)<select id="t-course">${courseOptions(viewState.tCourse||'')}</select></label>
+    </div>
+    <div class="card"><div class="row between"><h2>This week</h2><span class="chip accent">${(total/60).toFixed(1)} h</span></div>
+      <div class="bars">${barHTML(wk)}</div>
+      <p class="small muted">Minutes per day. A finished focus block logs itself; you can also log time you studied elsewhere.</p>
+      <form class="row" id="log-form" style="flex-wrap:nowrap"><input type="number" id="log-min" min="5" max="600" step="5" placeholder="Minutes" required><button class="btn" type="submit">Log time</button></form>
+    </div>
+  </div>`;
+};
+const mmss = s => `${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`;
+function tick(){
+  T.left = Math.max(0, T.len - Math.round((Date.now()-T.start)/1000));
+  const el=$('#t-time'); if(el) el.textContent = mmss(T.left);
+  const arc=$('#ring-arc'); if(arc){ const C=2*Math.PI*96; arc.setAttribute('stroke-dashoffset', C*(1-T.left/T.len)); }
+  document.title = T.running ? `${mmss(T.left)} · Nursing Study Space` : 'Nursing Study Space';
+  if (T.left===0){
+    clearInterval(T.iv); T.running=false; document.title='Nursing Study Space';
+    if (T.mode!=='break'){ put({kind:'log', date:todayISO(), minutes:Math.round(T.len/60), course:$('#t-course')?.value||viewState.tCourse||''}); toast('Session done and logged. Take a short break.'); }
+    else toast('Break over. Ready for another block?');
+    T.left=T.len; render();
+  }
+}
+function setMode(m){ clearInterval(T.iv); T.running=false; T.mode=m; T.len={focus:25,long:50,break:5}[m]*60; T.left=T.len; render(); }
+
+/* ---------- render ---------- */
+function render(){
+  const ae = document.activeElement; const keep = ae && ae.id ? {id:ae.id, s:ae.selectionStart, e:ae.selectionEnd} : null;
+  if (route==='assistant'){ const a=$('#ask'); if(a) viewState.draft=a.value; }
+  renderShell();
+  $('#view').innerHTML = V[route]();
+  if (keep){ const el=document.getElementById(keep.id); if(el){ el.focus({preventScroll:true}); try{ if(keep.s!=null) el.setSelectionRange(keep.s, keep.e); }catch{} } }
+  if (route==='assistant') autoGrow();
+}
+function autoGrow(){ const a=$('#ask'); if(!a) return; a.style.height='auto'; a.style.height=Math.min(200,a.scrollHeight)+'px'; }
+
+/* ---------- events ---------- */
+document.addEventListener('click', async e => {
+  const t = e.target.closest('[data-act],[data-pal]'); if(!t) return;
+  if (t.dataset.pal){ setPalette(t.dataset.pal); return; }
+  const act = t.dataset.act, id = t.dataset.id;
+  switch(act){
+    case 'more': openMore(); break;
+    case 'close-sheet': $('#sheet').hidden = true; break;
+    case 'seed': seedExamples(); break;
+    case 'toggle-task': { const it=S.items.get(id); patch(id,{done:!it.done}); break; }
+    case 'del': remove(id); break;
+    case 'confirm': viewState.confirm=id; render(); break;
+    case 'cancel': viewState.confirm=null; render(); break;
+    case 'quick-ask': { const q=$('#quick-ask').value; if(!q.trim()) return; location.hash='assistant'; setTimeout(()=>sendChat(q),0); break; }
+    case 'plan-exam': { const x=S.items.get(id); location.hash='assistant'; setTimeout(()=>sendChat(`Make a day-by-day study plan for my exam "${x.title}"${x.course?' ('+x.course+')':''} on ${fmtDate(x.due)}. Today is ${fmtDate(todayISO())}. Ask me what topics it covers and how many hours a day I have before you finalize it.`),0); break; }
+    case 'cat': viewState.cat=t.dataset.cat; render(); break;
+    case 'use-prompt': case 'go-prompt': {
+      const cat = t.dataset.cat || viewState.cat; const p = PROMPTS[cat][+t.dataset.i][1];
+      viewState.draft = p; if(location.hash!=='#assistant') location.hash='assistant'; else render();
+      setTimeout(()=>{ const a=$('#ask'); if(!a) return; a.value=p; autoGrow(); a.focus(); const s=p.indexOf('['); if(s>=0) a.setSelectionRange(s, p.indexOf(']',s)+1); },30); break; }
+    case 'send': sendChat($('#ask').value); break;
+    case 'new-chat': chatAbort?.abort(); viewState.chat=[]; render(); break;
+    case 'pick-img': $('#img-pick').click(); break;
+    case 'rm-img': viewState.images.splice(+t.dataset.i,1); render(); break;
+    case 'copy-msg': copyText(viewState.chat[+t.dataset.i].content); break;
+    case 'save-msg': { const m=viewState.chat[+t.dataset.i]; const q=viewState.chat[+t.dataset.i-1]?.content||'AI answer'; put({kind:'note', title:q.slice(0,60), course:'', body:m.content, updated:Date.now()}); toast('Saved to Notes'); break; }
+    case 'cards-msg': viewState.aiSrc = viewState.chat[+t.dataset.i].content; location.hash='cards'; setTimeout(()=>aiCards(viewState.aiSrc),30); break;
+    case 'deck': viewState.deck=t.dataset.deck; render(); break;
+    case 'start-study': { const d=viewState.deck; const q=dueCards().filter(c=>!d||(c.deck||'General')===d).map(c=>c.id).sort(()=>Math.random()-.5); viewState.study={queue:q,i:0,flip:false}; render(); break; }
+    case 'flip': if(viewState.study){ viewState.study.flip=!viewState.study.flip; render(); } break;
+    case 'grade': {
+      const st=viewState.study, c=S.items.get(st.queue[st.i]); const g=+t.dataset.g;
+      const box = g===0 ? 1 : g===1 ? Math.max(1,(c.box||1)) : Math.min(5,(c.box||1)+1);
+      const gap = g===0 ? 1 : [1,3,7,14,30][box-1];
+      patch(c.id,{box, next:addDays(todayISO(),gap)});
+      st.i++; st.flip=false; if(st.i>=st.queue.length){ viewState.study=null; toast('Review done. Nice work.'); } render(); break; }
+    case 'end-study': viewState.study=null; render(); break;
+    case 'ai-cards': aiCards($('#ai-cards-src').value); break;
+    case 'ai-cards-keep': viewState.aiCards.forEach(c=>put({kind:'card',deck:viewState.deck||'General',front:c.front,back:c.back,box:1,next:todayISO()})); viewState.aiCards=null; viewState.aiSrc=''; toast('Cards added'); break;
+    case 'ai-cards-drop': viewState.aiCards=null; render(); break;
+    case 'pick-files': viewState.upCourse=$('#up-course').value; $('#file-pick').click(); break;
+    case 'del-file': { const f=S.items.get(id); viewState.confirm=null; try{ if(S.assets && f.assetId) await S.assets.delete(f.assetId); }catch{} remove(id); toast('File deleted'); break; }
+    case 'ask-img': { const f=S.items.get(id); try{ const b=await (await fetch(f.url)).blob(); viewState.images=[{blob:b,url:f.url}]; viewState.draft='Explain what is on this slide and quiz me on it with 3 questions.'; location.hash='assistant'; render(); }catch{ toast('Could not load that image.'); } break; }
+    case 'plan-filter': viewState.planFilter=t.dataset.f; render(); break;
+    case 'new-note': { const n=put({kind:'note',title:'',course:'',body:'',updated:Date.now()}); viewState.noteId=n.id; render(); setTimeout(()=>$('#ne-title')?.focus(),0); break; }
+    case 'open-note': e.preventDefault(); viewState.noteId=id; viewState.confirm=null; render(); break;
+    case 'del-note': remove(id); viewState.noteId=null; viewState.confirm=null; render(); break;
+    case 'note-ai': { const n=S.items.get(viewState.noteId); if(!n?.body?.trim()) { toast('Write something in the note first.'); return; } const ask = t.dataset.mode==='summary' ? `Summarize my notes into a one-page exam review with key terms in bold:\n\n${n.body}` : `Quiz me on these notes with 5 questions, one at a time. Wait for my answer each time:\n\n${n.body}`; viewState.chat=[]; location.hash='assistant'; setTimeout(()=>sendChat(ask),30); break; }
+    case 'note-cards': { const n=S.items.get(viewState.noteId); if(!n?.body?.trim()) { toast('Write something in the note first.'); return; } viewState.deck=n.course||''; location.hash='cards'; setTimeout(()=>aiCards(n.body),30); break; }
+    case 'calc': viewState.calc=t.dataset.c; render(); break;
+    case 'labs-cards': LABS.forEach(([a,b])=>put({kind:'card',deck:'Lab values',front:`Normal adult ${a}?`,back:b,box:1,next:todayISO()})); toast(`${LABS.length} lab cards added to "Lab values"`); break;
+    case 'exam-start': examStart(t.dataset.id, t.dataset.m); break;
+    case 'exam-quit': viewState.exam=null; lsSet(EXAM_KEY,null); render(); toast('Exam closed. Nothing was saved.'); break;
+    case 'exam-done': viewState.exam=null; lsSet(EXAM_KEY,null); render(); window.scrollTo(0,0); break;
+    case 'exam-retry': { const a=S.items.get(id); if(a && examById(a.exam)) examStart(a.exam, a.mode, a.missed); break; }
+    case 'exam-retry-now': { const r=viewState.exam; examStart(r.id, r.mode, examMissed(r)); break; }
+    case 'exam-mark': { const r=viewState.exam, i=+t.dataset.q; r.marks[i]=+t.dataset.v; if(r.idx.every(k=>r.marks[k]!=null)) examSave(); lsSet(EXAM_KEY,r); render(); break; }
+    case 'exam-ai': examAiMark(); break;
+    case 'exam-cheat': viewState.cheat=t.dataset.id; viewState.cheatY=window.scrollY; render(); window.scrollTo(0,0); break;
+    case 'cheat-close': { const y=viewState.cheatY||0; viewState.cheat=null; render(); window.scrollTo(0,y); break; }
+    case 'exam-cards': { const r=viewState.exam, ex=examById(r.id); const miss=examMissed(r); miss.forEach(i=>put({kind:'card',deck:ex.course+' exam',front:ex.qs[i].q,back:ex.qs[i].a,box:1,next:todayISO()})); toast(`${miss.length} cards added to "${ex.course} exam"`); break; }
+    case 'tmode': setMode(t.dataset.m); break;
+    case 'tstart':
+      if (T.running){ clearInterval(T.iv); T.running=false; T.len=T.left; }
+      else { viewState.tCourse=$('#t-course')?.value||''; T.start=Date.now(); T.running=true; T.iv=setInterval(tick,500); }
+      render(); break;
+    case 'treset': setMode(T.mode); break;
+  }
+});
+document.addEventListener('keydown', e => {
+  if (e.target.id==='ask' && e.key==='Enter' && !e.shiftKey && !e.isComposing){ e.preventDefault(); sendChat(e.target.value); }
+  if (e.target.closest?.('.flash') && (e.key===' '||e.key==='Enter')){ e.preventDefault(); viewState.study.flip=!viewState.study.flip; render(); }
+  if (e.key==='Escape' && !$('#sheet').hidden) $('#sheet').hidden=true;
+});
+document.addEventListener('input', e => {
+  const id = e.target.id;
+  if (id==='ask'){ viewState.draft=e.target.value; autoGrow(); }
+  if (id==='file-search'){ viewState.fileFilter=e.target.value; render(); }
+  if (id==='note-q'){ viewState.noteQ=e.target.value; render(); }
+  if (id==='ne-title' || id==='ne-body') saveNoteSoon();
+  if (e.target.dataset.calc) runCalc(e.target.dataset.calc);
+  if (e.target.matches?.('textarea[data-q]') && viewState.exam){ viewState.exam.ans[+e.target.dataset.q]=e.target.value; examProgress(); }
+});
+document.addEventListener('change', e => {
+  if (e.target.id==='ne-course') saveNoteSoon();
+  if (e.target.matches?.('input[type=radio][data-q]') && viewState.exam){ viewState.exam.ans[+e.target.dataset.q]=+e.target.value; examProgress(); }
+  if (e.target.matches?.('input[type=checkbox][data-q]') && viewState.exam){ const q=e.target.dataset.q; viewState.exam.ans[+q]=[...document.querySelectorAll(`input[type=checkbox][data-q="${q}"]:checked`)].map(x=>+x.value); examProgress(); }
+  if (e.target.id==='file-pick'){ uploadFiles([...e.target.files]); e.target.value=''; }
+  if (e.target.id==='img-pick'){ [...e.target.files].slice(0,4).forEach(f=>viewState.images.push({blob:f,url:URL.createObjectURL(f)})); e.target.value=''; render(); }
+});
+document.addEventListener('submit', e => {
+  e.preventDefault();
+  const f = e.target.id;
+  if (f==='task-form'){ put({kind:'task', title:$('#tf-title').value.trim(), due:$('#tf-due').value, type:$('#tf-type').value, course:$('#tf-course').value, done:false}); toast('Added to planner'); }
+  if (f==='course-form'){ const n=$('#co-name').value.trim(); if(n && !all('course').some(c=>c.name===n)) put({kind:'course', name:n}); }
+  if (f==='card-form'){ put({kind:'card', front:$('#cf-front').value.trim(), back:$('#cf-back').value.trim(), deck:$('#cf-deck').value.trim()||'General', box:1, next:todayISO()}); toast('Card added'); setTimeout(()=>$('#cf-front')?.focus(),0); }
+  if (f==='exam-form'){
+    const r=viewState.exam, left=r.idx.length-examAnswered(r);
+    if (left && !viewState.examConfirm){ viewState.examConfirm=true; toast(`${left} question${left===1?'':'s'} still blank. Press Submit again to hand it in anyway.`); const first=r.idx.find(i=>!hasAns(r,i)); document.getElementById('q-'+first)?.scrollIntoView({behavior:'smooth',block:'center'}); return; }
+    viewState.examConfirm=false; r.submitted=true; if(r.mode==='mc') examSave(); lsSet(EXAM_KEY,null); render(); window.scrollTo(0,0); return;
+  }
+  if (f==='log-form'){ put({kind:'log', date:todayISO(), minutes:+$('#log-min').value, course:''}); toast('Time logged'); }
+});
+['dragover','dragleave','drop'].forEach(ev => document.addEventListener(ev, e => {
+  const d = e.target.closest?.('#drop'); if(!d) return;
+  e.preventDefault();
+  if (ev==='dragover') d.classList.add('over');
+  else { d.classList.remove('over'); if(ev==='drop' && e.dataTransfer.files.length) uploadFiles([...e.dataTransfer.files]); }
+}));
+document.addEventListener('paste', e => {
+  if (route!=='assistant') return;
+  const imgs = [...(e.clipboardData?.files||[])].filter(f=>/^image\//.test(f.type));
+  if (imgs.length){ imgs.slice(0,4).forEach(f=>viewState.images.push({blob:f,url:URL.createObjectURL(f)})); render(); }
+});
+window.addEventListener('hashchange', () => { readHash(); viewState.confirm=null; viewState.cheat=null; $('#sheet').hidden=true; render(); window.scrollTo(0,0); });
+
+readHash(); render(); initStore();
+})();
+</script>
