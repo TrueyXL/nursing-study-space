@@ -1,0 +1,16 @@
+name = "nursing-study-ai"
+main = "src/index.ts"
+compatibility_date = "2025-09-01"
+
+[vars]
+ALLOWED_ORIGINS = "https://trueyxl.github.io"
+# Switch to "claude-haiku-5-5" to cut cost (about 40x cheaper per token, less thorough).
+MODEL = "claude-opus-5-5"
+
+# Per-visitor limit: 15 AI requests per minute.
+[[ratelimits]]
+name = "LIMITER"
+namespace_id = "1001"
+  [ratelimits.simple]
+  limit = 15
+  period = 60

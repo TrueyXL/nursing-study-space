@@ -341,8 +341,52 @@ function remove(id){
   S.items.delete(id); persistLocal(); render();
   if (S.mode==='cloud') S.col.doc(id).delete().catch(()=>toast('Could not delete. Try again.'));
 }
+/* ---------- AI outside claude.ai: Cloudflare Worker that holds the API key ---------- */
+const AI_URL = 'https://nursing-study-ai.eoe-push.workers.dev';
+const CODE_KEY = 'nss-class-code';
+const aiErr = code => Object.assign(new Error(code), {code});
+async function shrinkImage(blob){
+  try{
+    const bmp = await createImageBitmap(blob); const max = 1568, sc = Math.min(1, max/Math.max(bmp.width,bmp.height));
+    const c = document.createElement('canvas'); c.width = Math.round(bmp.width*sc); c.height = Math.round(bmp.height*sc);
+    c.getContext('2d').drawImage(bmp,0,0,c.width,c.height);
+    const out = await new Promise(r=>c.toBlob(r,'image/jpeg',0.85)); blob = out || blob;
+  }catch{}
+  const b64 = await new Promise((res,rej)=>{ const fr=new FileReader(); fr.onload=()=>res(String(fr.result).split(',')[1]); fr.onerror=rej; fr.readAsDataURL(blob); });
+  return {media_type: blob.type || 'image/jpeg', data: b64};
+}
+async function remoteCall(messages, opts={}, mode='chat'){
+  const code = lsGet(CODE_KEY, '');
+  if (!code) throw aiErr('need_code');
+  const images = opts.images?.length ? await Promise.all(opts.images.slice(0,4).map(shrinkImage)) : [];
+  let res;
+  try{ res = await fetch(AI_URL, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({code, mode, messages, images}), signal:opts.signal}); }
+  catch(e){ throw aiErr(e?.name==='AbortError' ? 'cancelled' : 'offline'); }
+  if (!res.ok){
+    const j = await res.json().catch(()=>({}));
+    if (j.error==='bad_code'){ lsSet(CODE_KEY,''); render(); }
+    throw aiErr(j.error || 'error');
+  }
+  const rd = res.body.getReader(), dec = new TextDecoder(); let text = '';
+  try{
+    for(;;){ const {done, value} = await rd.read(); if (done) break; text += dec.decode(value, {stream:true});
+      const k = text.indexOf('\u001e'); if (k<0) opts.onText?.({text}); }
+  }catch(e){ throw aiErr(e?.name==='AbortError' ? 'cancelled' : 'offline'); }
+  const k = text.indexOf('\u001e');
+  if (k>=0){ const err = (()=>{ try{ return JSON.parse(text.slice(k+1)).error; }catch{ return 'error'; } })(); throw Object.assign(aiErr(err), {text:text.slice(0,k)}); }
+  return {text};
+}
+function remoteSample(msgs, opts){ return remoteCall(msgs, opts, 'chat'); }
+remoteSample.json = async (prompt, opts) => {
+  const {text} = await remoteCall([{role:'user', content: prompt + '\n\nReply with the JSON only, no other text.'}], opts, 'json');
+  const t = text.replace(/```(?:json)?/g,''); const a = t.search(/[\[{]/), b = Math.max(t.lastIndexOf('}'), t.lastIndexOf(']'));
+  try{ return JSON.parse(t.slice(a, b+1)); }catch{ throw aiErr('bad_json'); }
+};
+const AI_MSG = {need_code:'Enter your class code on the AI Assistant page to use AI.', bad_code:'That class code is not right. Check it with your class and enter it again.', rate_limited:'Too many AI requests. Wait a minute and try again.', busy:'The AI is busy right now. Try again in a minute.', offline:'Could not reach the AI. Check your connection.', server_key:'AI is not switched on yet for this site.', refusal:'The assistant could not answer that one. Try rephrasing.', not_granted:'AI was not allowed for this page.'};
+const aiMsg = (e, fallback) => AI_MSG[e?.code] || fallback;
+
 async function initStore(){
-  if (!window.claude?.use){ useLocal(); return; }
+  if (!window.claude?.use){ S.sample = remoteSample; S.remote = true; useLocal(); return; }
   const timer = setTimeout(useLocal, 10000);
   const [db, user, assets, sample] = await Promise.all(['db','user','assets','sample'].map(n => window.claude.use(n).catch(()=>null)));
   S.assets = assets; S.sample = sample;
@@ -528,6 +572,8 @@ V.assistant = () => {
   <div class="head"><div><h1>AI Study Assistant</h1><p class="muted">Pick a suggested prompt, fill in the [brackets], or ask anything.</p></div>
     ${viewState.chat.length ? `<button class="btn sm" data-act="new-chat">New chat</button>`:''}</div>
   ${noAI ? `<div class="banner">The assistant works when this page is opened on claude.ai while signed in.</div>`:''}
+  ${S.remote && !lsGet(CODE_KEY,'') ? `<form class="card" id="code-form"><h2>Enter your class code</h2><p class="small muted">Your instructor or study group shares this code. You only enter it once on this device.</p>
+    <div class="row" style="flex-wrap:nowrap"><input type="text" id="class-code" placeholder="Class code" autocomplete="off" autocapitalize="off" required><button class="btn primary" type="submit">Unlock AI</button></div></form>` : ''}
   ${viewState.chat.length===0 ? `
   <div class="stack">
     <div class="prompt-cats" role="tablist">${cats.map(c=>`<button class="pill" aria-pressed="${c===viewState.cat}" data-act="cat" data-cat="${esc(c)}">${esc(c)}</button>`).join('')}</div>
@@ -541,7 +587,7 @@ V.assistant = () => {
       <textarea id="ask" rows="1" placeholder="Ask about a condition, drug, calculation…">${esc(viewState.draft||'')}</textarea>
       <button class="btn primary" data-act="send" aria-label="Send" ${chatAbort?'disabled':''}>${chatAbort?'<span class="spin"></span>':I.send}</button>
     </div>
-    <p class="tiny muted">For studying only. Check facts against your course materials. Never include patient identifiers.</p>
+    <p class="tiny muted">For studying only. Check facts against your course materials. Never include patient identifiers.${S.remote && lsGet(CODE_KEY,'') ? ` · <a href="#assistant" data-act="clear-code">Change class code</a>` : ''}</p>
   </div>`;
 };
 function msgHTML(m, i){
@@ -570,6 +616,7 @@ async function sendChat(text){
   text = (text||'').trim();
   if (!text || chatAbort) return;
   if (!S.sample){ toast('The assistant needs claude.ai while signed in.'); return; }
+  if (S.remote && !lsGet(CODE_KEY,'')){ toast(AI_MSG.need_code); if(route!=='assistant') location.hash='assistant'; return; }
   const imgs = viewState.images.map(x=>x.blob);
   viewState.chat.push({role:'user', content:text, imgs: imgs.length||0});
   viewState.images = []; viewState.draft = '';
@@ -582,7 +629,7 @@ async function sendChat(text){
     const r = await S.sample(msgs, opts);
     a.content = r.text;
   }catch(e){
-    a.content = (e?.text ? e.text + '\n\n' : '') + (e?.code==='not_granted' ? '_The assistant was not allowed. You can turn it on from this page\'s Permissions menu._' : e?.code==='rate_limited' ? '_Too many requests right now. Wait a minute and try again._' : e?.code==='cancelled' ? '_Stopped._' : '_Something went wrong. Try again._');
+    a.content = (e?.text ? e.text + '\n\n' : '') + (AI_MSG[e?.code] && e.code!=='not_granted' && e.code!=='rate_limited' ? '_'+AI_MSG[e.code]+'_' : e?.code==='not_granted' ? '_The assistant was not allowed. You can turn it on from this page\'s Permissions menu._' : e?.code==='rate_limited' ? '_Too many requests right now. Wait a minute and try again._' : e?.code==='cancelled' ? '_Stopped._' : '_Something went wrong. Try again._');
   }
   a.done = true; chatAbort = null; render(); scrollChat();
 }
@@ -591,6 +638,132 @@ function updateLastMsg(a){
   if (el) el.innerHTML = md(a.content);
 }
 function scrollChat(){ const c=$('#chat'); if(c && c.lastElementChild) c.lastElementChild.scrollIntoView({block:'end', behavior:'smooth'}); }
+
+/* ----- built-in course decks (from the NUR 323/623 Acute Cardiac Illness slides + Lewis textbook ch. on HTN and CAD/ACS) ----- */
+const SL = 'Course slides', TB = 'Textbook';
+const DECKS = [
+ {name:'Cardiac · Hypertension', cards:[
+  ['Normal adult BP (course slides)?','Systolic < 120 mmHg and diastolic < 80 mmHg.',SL],
+  ['Stage 1 hypertension (course slides)?','Systolic 130–139 mmHg or diastolic 80–89 mmHg.',SL],
+  ['Stage 2 hypertension (course slides)?','Systolic ≥ 140 mmHg or diastolic ≥ 90 mmHg.',SL],
+  ['How is hypertension diagnosed?','Average of 2 or more properly measured readings at 2 or more visits. Out-of-office readings confirm the diagnosis.',SL],
+  ['Define systolic pressure.','The maximum arterial pressure while the left ventricle contracts.',SL],
+  ['Define diastolic pressure.','The minimum arterial pressure while the ventricles relax and fill.',SL],
+  ['Normal BP depends on the balance between which two things?','Cardiac output and peripheral vascular resistance.',SL],
+  ['What activates the renin–angiotensin system?','NaCl levels and sympathetic nervous system stimulation.',SL],
+  ['What does the renin–angiotensin system do to BP?','Vasoconstriction (↑ peripheral resistance) + Na⁺ and water reabsorption → ↑ BP.',SL],
+  ['What is diastolic dysfunction in hypertension?','The LV can\'t relax in diastole. It becomes stiff and can\'t respond to higher demand, such as exercise.',SL],
+  ['Nitric oxide vs endothelin?','Nitric oxide: potent vasodilator. Endothelin: potent vasoconstrictor. Endothelial dysfunction causes irreversible changes once HTN is established.',SL],
+  ['Correct BP cuff size?','Bladder encircles at least 80 % of the arm; cuff width at least 40 % of arm circumference.',TB],
+  ['How should the patient be positioned for a BP?','Seated after 5 min rest, quiet, arm bare, supported at heart level. Electronic devices are preferred.',TB],
+  ['First-visit BP: which arm, how many readings?','Both arms, then use the arm with the higher reading. Average 2 or more readings taken at least 2 min apart.',TB],
+  ['What postural BP change is abnormal?','After 2 min standing: a systolic drop > 10 mmHg or any drop in diastolic.',TB],
+  ['Hypertensive emergency: key signs?','Encephalopathy (headache, N/V, confusion, seizures), blurred vision, renal failure, ACS or pulmonary edema, aortic dissection.',TB],
+  ['Hypertensive urgency vs emergency?','Urgency develops over days to weeks without acute organ damage and can be treated with oral drugs. Emergency has acute target-organ damage.',TB],
+ ]},
+ {name:'Cardiac · CAD & angina', cards:[
+  ['When are the coronary arteries perfused?','During diastole. Hypertension and tachycardia reduce coronary perfusion (↓ supply).',SL],
+  ['Define atherosclerosis.','Lipid buildup, scarring and inflammation in the arterial intima → wall thickening, stenosis, calcification, sometimes thrombosis.',SL],
+  ['Modifiable CAD risk factors?','Smoking, diet high in fat/sugar/salt, inactivity, obesity and waist girth, dyslipidemia, hypertension, diabetes.',SL],
+  ['Non-modifiable CAD risk factors?','Genetics, male sex, age, menopause, complications during pregnancy.',SL],
+  ['Consequences of atherosclerotic disease?','Angina (stable, unstable) and MI (STEMI, NSTEMI, MINOCA, SCAD).',SL],
+  ['Differential causes of retrosternal chest pain?','MI/unstable angina, stable angina, pericarditis, anxiety, GERD, musculoskeletal, pneumonia, heart failure, pulmonary embolism.',SL],
+  ['Typical cardiac chest pain features?','Squeezing/heavy pressure, indigestion, shortness of breath, radiation to left arm, shoulder, jaw or back, fatigue, diaphoresis.',SL],
+  ['How do women often present with ACS?','Without typical pain: nausea, indigestion, dyspnea, chest pressure, fatigue.',SL],
+  ['What does PQRSTU stand for?','Precipitating/Palliating, Quality, Radiating, Symptoms/Severity (1–10), Timing, Understanding.',SL],
+  ['Define angina.','Myocardial O₂ demand exceeds what the coronary arteries can supply.',SL],
+  ['Stable angina?','Predictable trigger, quickly relieved by rest or nitroglycerin, no myocardial injury.',SL],
+  ['Unstable (crescendo) angina?','Unpredictable, increasing in frequency and duration, triggered by less activity. No myocardial injury, but an emergency.',SL],
+  ['Silent ischemia: who and why?','Mostly diabetics. Possibly loss of nerve endings, low vagal tone, higher pain threshold, more endorphins. Often found on a routine ECG.',SL],
+  ['What is MINOCA?','MI with non-obstructive coronary arteries (microvascular disease). Normal angiogram; troponin rises if it presents as ACS.',SL],
+  ['What is SCAD, and who gets it?','Spontaneous coronary artery dissection: an intimal tear with a false lumen. Younger or middle-aged women, pregnancy/postpartum, connective tissue disorders.',SL],
+  ['How is sublingual nitroglycerin taken for angina?','1 tablet or 1 spray under the tongue. If pain is unchanged or worse after 5 min, call 911 (EMS).',TB],
+  ['Nitroglycerin onset and duration?','Relieves pain in about 3 min; lasts about 30–60 min.',TB],
+  ['Nitroglycerin teaching?','May tingle, cause headache, flushing, dizziness, ↑ HR. Rise slowly (orthostatic hypotension). Keep in the tightly closed, light-resistant bottle.',TB],
+ ]},
+ {name:'Cardiac · ACS & MI', cards:[
+  ['What happens in ACS?','Plaque rupture exposes thrombogenic material → platelets, fibrin and RBCs obstruct the coronary lumen.',SL],
+  ['STEMI criteria?','Chest pain + ↑ cardiac markers + ST elevation in 2 adjacent leads or a new LBBB. An emergency.',SL],
+  ['NSTEMI?','Chest pain + ↑ troponin without ST elevation.',SL],
+  ['How long do cardiac cells survive without O₂?','About 20 min. If flow returns, aerobic metabolism and contraction recover; if not, cells die → ↓ cardiac output.',SL],
+  ['Why does ischemia cause pain?','Anaerobic metabolism → lactic acid irritates myocardial nerve fibres.',SL],
+  ['Evolution of a STEMI on ECG?','ST elevation → Q wave and T inversion → deep T inversion → Q wave with ST back to baseline (healed).',SL],
+  ['Inferior wall MI: leads and artery?','II, III, aVF: right coronary artery (RCA).',SL],
+  ['Anterior wall MI: leads and artery?','V1–V4: left anterior descending (LAD).',SL],
+  ['Lateral wall MI: leads and artery?','I, aVL, V5, V6: circumflex / first diagonal.',SL],
+  ['Posterior wall MI on ECG?','Reciprocal changes in V1–V4: posterior descending artery (PDA).',SL],
+  ['Right ventricular MI: which ECG lead?','V4R on a right-sided ECG: RV branch of the RCA.',SL],
+  ['Troponin timing?','Rises 3–12 h after onset, peaks at 24–48 h, back to baseline in 5–14 days.',SL],
+  ['Emergency blood tests for chest pain?','CBC, electrolytes, troponin.',SL],
+  ['Priority nursing actions for chest pain?','Stay with the patient, calm; stop activity, semi-Fowler\'s; O₂ if SpO₂ < 90 %; nitroglycerin as ordered; notify MD; start an IV.',SL],
+  ['What does OVEN stand for?','Oxygen, Vital signs, ECG, Nitroglycerin.',SL],
+  ['When is O₂ given in ACS?','Only if SpO₂ < 90 %, dyspnea, hypoxemia or signs of HF. Start 2 L/min (4 L/min on a cardiac floor).',SL],
+  ['Preparing a STEMI patient for transfer to CCU?','Stay with them, bring an O₂ tank, put them on a cardiac monitor, accompany them and give report.',SL],
+  ['Before giving a fibrinolytic, what is done?','Draw baseline labs, start 2–3 IV lines, and do all invasive procedures first, to reduce bleeding.',TB],
+  ['Contraindications to fibrinolytics (textbook list)?','Active peptic ulcer, anticoagulant use, recent surgery or non-compressible puncture, internal bleeding in 2–4 wk, BP > 180/110, CPR > 10 min, ischemic stroke > 3 mo ago.',TB],
+  ['Complications of PCI?','In-stent restenosis/thrombosis, coronary dissection, perforation, side-branch occlusion, pseudoaneurysm, retroperitoneal bleed.',SL],
+  ['Nursing care after a cardiac event?','Watch for recurrent pain, dysrhythmias and complications; post-PCI checks; rest then gradual activity; emotional support.',SL],
+  ['Main cause of sudden cardiac death?','Malignant ventricular arrhythmias (VT or VF). More than half of patients with ischemic heart disease die suddenly.',SL],
+  ['Phases of cardiac rehab?','I: in hospital. II: after discharge, 2–12 wk outpatient with ECG monitoring. III: lifelong maintenance.',TB],
+  ['Sexual activity after ACS: key teaching?','Wait 3–4 h after a large meal or alcohol; nitrates beforehand can prevent angina; never use sildenafil-type drugs with nitrates.',TB],
+  ['Psychosocial issues after a cardiac event?','Depression is common ("brush with death") and slows recovery. Involve spouse, family and friends.',SL],
+ ]},
+ {name:'Cardiac · Medications', cards:[
+  ['Nitroglycerin: action?','Dilates coronary and peripheral vessels: ↑ coronary and collateral flow, ↓ SVR, ↓ preload, ↓ O₂ consumption.',SL],
+  ['Morphine in STEMI: why and watch for?','↓ pain and anxiety, vasodilates (↓ preload), ↓ myocardial O₂ use. Watch respiratory depression, N/V, ↓ BP and HR.',SL],
+  ['ASA in acute MI: dose and action?','162–325 mg chewed and swallowed. Blocks COX-1 → no thromboxane A₂ → ↓ platelet aggregation.',SL],
+  ['ASA for prevention: dose and caution?','80 mg PO daily. Caution with a history of GI bleeding; ↑ bleeding risk.',SL],
+  ['Clopidogrel, prasugrel, ticagrelor: action and use?','Block ADP binding → platelets can\'t activate GP IIb/IIIa. Dual antiplatelet therapy with ASA around stenting.',SL],
+  ['Which P2Y12 inhibitor is contraindicated after stroke/TIA?','Prasugrel (Effient).',SL],
+  ['Heparin/LMWH in ACS?','Prevents the clot from growing or new clots forming. Does not dissolve the existing clot. Contraindicated with active bleeding or HIT.',SL],
+  ['Beta blockers: action and contraindications?','Block catecholamines → ↓ BP, HR, contractility. Avoid in pulmonary edema, asthma/bronchospasm. Watch bradycardia, orthostatic hypotension.',SL],
+  ['ACE inhibitors/ARBs: why after ACS?','↓ mortality and remodeling (EF < 40 %), control BP. Dry cough → switch to ARB. Contraindicated in renal artery stenosis.',SL],
+  ['Amlodipine after CABG: why?','Dihydropyridine CCB: vasodilator and anti-spasmodic for arterial grafts; also treats HTN. Hold if hypotensive.',SL],
+  ['Statins: action and adverse effects?','Inhibit HMG-CoA reductase → ↓ LDL. Watch liver dysfunction and muscle toxicity. Given at bedtime.',SL],
+  ['Discharge teaching after a cardiac event?','Diet, activity, weight, smoking, alcohol, medications, symptom recognition, return to work and driving, stress, follow-up.',SL],
+ ]},
+ {name:'Cardiac · CABG & chest tubes', cards:[
+  ['Indications for CABG?','Multivessel occlusion ≥ 50 %, high-risk PCI, valve surgery at the same time, or PCI would give suboptimal revascularization.',SL],
+  ['What is a MIDCAB?','Minimally invasive CABG through small incisions between the ribs, on a beating heart, usually LIMA → LAD.',SL],
+  ['What is a hybrid procedure?','Robotic CABG plus PCI for other blockages, at the same time or right after.',SL],
+  ['What is a pleural effusion?','Fluid in the pleural space. Thoracentesis and fluid analysis find the cause.',SL],
+  ['Transudative effusion: mechanism and main cause?','↑ hydrostatic and/or ↓ oncotic pressure. Heart failure most common, then cirrhosis and nephrotic syndrome.',SL],
+  ['Exudative effusion: mechanism and causes?','↑ capillary permeability. Pneumonia, cancer, PE, viral infection, TB.',SL],
+  ['Indications for a chest tube?','Pneumothorax, tension pneumothorax, hemothorax, pleural effusion, chylothorax.',SL],
+  ['What is a tension pneumothorax?','Air builds up and shifts the mediastinum → ↓ venous return and lung collapse. Life-threatening.',SL],
+  ['Chest tube output limit in the first hour?','No more than 1.5 L. If more: clamp and call the physician.',SL],
+  ['Emergency equipment at the bedside for a chest tube?','At least 2 clamps per drain (emergency use only) and 2 suction outlets.',SL],
+  ['Chest tube checks every shift?','Auscultate; check tubing, dressing, anchoring, unit secured, suction as ordered, not clamped, bubbling; record drainage.',SL],
+  ['Bubbling in the water-seal chamber means?','An air leak.',SL],
+  ['Care after chest tube removal?','Sealed occlusive dressing; watch RR and SpO₂. Main complication: pneumothorax.',SL],
+ ]},
+ {name:'Cardiac · Pericarditis & AF', cards:[
+  ['What is acute pericarditis?','Inflammation of the pericardial sac, often with an effusion; can involve the myocardium. Tamponade is possible.',SL],
+  ['Signs and symptoms of pericarditis?','Sharp pleuritic pain better sitting forward, friction rub at left sternal border, widespread ST↑ / PR depression, ↑ CRP, effusion.',SL],
+  ['Labs for suspected pericarditis?','CBC, creatinine and electrolytes, troponin, CRP.',SL],
+  ['Colchicine for pericarditis?','Reduces neutrophil migration. At least 3 months. Side effect: diarrhea.',SL],
+  ['High-dose NSAIDs for pericarditis?','ASA 650 mg QID or ibuprofen 600 mg TID, with a PPI (pantoprazole) to protect the stomach.',SL],
+  ['Pericarditis discharge teaching?','No strenuous activity until symptoms resolve and markers normalize; finish treatment; follow-up in 4 weeks.',SL],
+  ['Four properties of cardiac cells?','Automaticity, excitability, conductivity, contractility.',SL],
+  ['Automaticity depends on which electrolytes?','K⁺, Na⁺ and Ca²⁺.',SL],
+  ['Supraventricular arrhythmias?','PACs, atrial fibrillation, atrial flutter, sick sinus syndrome, AV blocks, WPW.',SL],
+  ['Ventricular arrhythmias?','PVCs, bundle branch blocks, VT (monomorphic, polymorphic/torsades), VF, asystole.',SL],
+  ['AF on the ECG?','No P waves, wavy baseline, irregularly irregular rhythm.',SL],
+  ['AF: early vs late mechanism?','Early: focal ectopic firing. Later: structural remodeling (inflammation, fibrosis) creates re-entry.',SL],
+  ['AF classifications?','Paroxysmal, persistent, permanent.',SL],
+  ['Modifiable AF risk factors (> 50 % of burden)?','Obesity, hypertension, diabetes, smoking, alcohol, previous cardiovascular disease.',SL],
+  ['CHADS₂ points?','CHF 1, HTN 1, Age ≥ 75 1, Diabetes 1, Stroke/TIA 2. CHADS-65 adds 1 point for age ≥ 65.',SL],
+  ['CHADS₂ score → yearly stroke risk?','0: 1.9 %, 1: 2.8 %, 2: 4.0 %, 3: 5.9 %, 4: 8.5 %.',SL],
+  ['Stroke prevention in AF (Mrs S)?','A DOAC. ASA stopped: more bleeding and no added benefit from three agents.',SL],
+  ['Nursing priorities for new AF?','Medication adherence for risk reduction, risk factor management, regular physical activity.',SL],
+ ]},
+];
+const hasCard = front => all('card').some(c=>c.front===front);
+function addDeck(d){
+  const t = todayISO(); let n = 0;
+  d.cards.forEach(([front,back,src]) => { if(!hasCard(front)){ put({kind:'card', deck:d.name, front, back, src, box:1, next:t}); n++; } });
+  return n;
+}
 
 /* ----- flashcards ----- */
 viewState.deck = '';
@@ -607,7 +780,7 @@ V.cards = () => {
     if (!c) { viewState.study=null; return V.cards(); }
     return `<div class="head"><div><h1>Reviewing${deck?' '+esc(deck):''}</h1><p class="muted">${st.i+1} of ${st.queue.length} · tap the card to flip</p></div><button class="btn sm" data-act="end-study">Finish</button></div>
     <div class="flash ${st.flip?'flip':''}" data-act="flip" role="button" tabindex="0" aria-label="Flip card">
-      <div class="flash-in"><div class="face"><span class="label">Question</span><div>${esc(c.front)}</div></div><div class="face back"><span class="label">Answer</span><div>${esc(c.back)}</div></div></div></div>
+      <div class="flash-in"><div class="face"><span class="label">Question</span><div>${esc(c.front)}</div></div><div class="face back"><span class="label">Answer</span><div>${esc(c.back)}</div>${c.src?`<span class="tiny muted">${esc(c.src)}</span>`:''}</div></div></div>
     <div class="row" style="justify-content:center">${st.flip ? `<button class="btn" data-act="grade" data-g="0">Again</button><button class="btn" data-act="grade" data-g="1">Hard</button><button class="btn primary" data-act="grade" data-g="2">Got it</button>` : `<button class="btn primary" data-act="flip">Show answer</button>`}</div>
     <p class="tiny muted" style="text-align:center">"Got it" moves a card to a longer gap (1, 3, 7, 14, then 30 days). "Again" brings it back tomorrow.</p>`;
   }
@@ -621,6 +794,9 @@ V.cards = () => {
       : `<div class="empty small">No cards yet. Write one on the right, or let the AI make a set from your notes.</div>`}
     </div>
     <div class="stack">
+      <div class="card"><div class="row between"><h2>Course decks</h2>${DECKS.some(d=>d.cards.some(c=>!hasCard(c[0])))?`<button class="btn sm primary" data-act="add-all-decks">Add all</button>`:''}</div>
+        <p class="small muted">Acute Cardiac Illness, NUR 323/623. Made from the course slides and the textbook chapters.</p>
+        <div class="list">${DECKS.map((d,i)=>{ const left=d.cards.filter(c=>!hasCard(c[0])).length; return `<div class="li"><div class="grow"><div class="t">${esc(d.name)}</div><div class="tiny muted">${d.cards.length} cards</div></div>${left?`<button class="btn sm" data-act="add-deck" data-i="${i}">${left===d.cards.length?'Add':'Add '+left+' new'}</button>`:`<span class="chip clinical">Added</span>`}</div>`; }).join('')}</div></div>
       <form class="card" id="card-form"><h2>New card</h2>
         <label class="f">Question<textarea id="cf-front" rows="2" required></textarea></label>
         <label class="f">Answer<textarea id="cf-back" rows="2" required></textarea></label>
@@ -638,6 +814,7 @@ V.cards = () => {
 };
 async function aiCards(src){
   if (!S.sample){ toast('AI needs claude.ai while signed in.'); return; }
+  if (S.remote && !lsGet(CODE_KEY,'')){ toast(AI_MSG.need_code); if(route!=='assistant') location.hash='assistant'; return; }
   if (!src.trim()) { toast('Paste some notes or name a topic first.'); return; }
   viewState.aiBusy = true; viewState.aiSrc = src; render();
   try{
@@ -645,7 +822,7 @@ async function aiCards(src){
     const cards = (out?.cards || out || []).filter(c => c && c.front && c.back).slice(0,12);
     viewState.aiCards = cards.length ? cards : null;
     if (!cards.length) toast('No cards came back. Try more detail.');
-  }catch(e){ toast(e?.code==='not_granted' ? 'AI was not allowed for this page.' : 'Could not make cards. Try again.'); }
+  }catch(e){ toast(aiMsg(e, 'Could not make cards. Try again.')); }
   viewState.aiBusy = false; render();
 }
 
@@ -1082,6 +1259,7 @@ function examCheat(ex){
 async function examAiMark(){
   const r = viewState.exam, ex = examById(r.id);
   if (!S.sample){ toast('AI marking needs claude.ai while signed in. Mark them yourself below.'); return; }
+  if (S.remote && !lsGet(CODE_KEY,'')){ toast(AI_MSG.need_code); if(route!=='assistant') location.hash='assistant'; return; }
   viewState.examAiBusy = true; render();
   const items = r.idx.map(i=>({id:i, question:ex.qs[i].q, key:ex.qs[i].a, student:(r.ans[i]||'').trim()||'(blank)'}));
   try{
@@ -1089,7 +1267,7 @@ async function examAiMark(){
     (out?.marks||[]).forEach(m => { if (r.idx.includes(+m.id) && [0,0.5,1].includes(+m.score)){ r.marks[+m.id]=+m.score; r.ai[+m.id]=m.feedback||''; } });
     if (r.idx.every(i=>r.marks[i]!=null)){ examSave(); toast('Marked. You can change any mark below.'); }
     else toast('Some answers were not marked. Mark the rest yourself.');
-  }catch(e){ toast(e?.code==='not_granted' ? 'AI was not allowed for this page.' : 'Could not mark with AI. Mark them yourself below.'); }
+  }catch(e){ toast(aiMsg(e, 'Could not mark with AI. Mark them yourself below.')); }
   viewState.examAiBusy = false; lsSet(EXAM_KEY, r); render();
 }
 function examProgress(){
@@ -1252,6 +1430,9 @@ document.addEventListener('click', async e => {
     case 'exam-retry-now': { const r=viewState.exam; examStart(r.id, r.mode, examMissed(r)); break; }
     case 'exam-mark': { const r=viewState.exam, i=+t.dataset.q; r.marks[i]=+t.dataset.v; if(r.idx.every(k=>r.marks[k]!=null)) examSave(); lsSet(EXAM_KEY,r); render(); break; }
     case 'exam-ai': examAiMark(); break;
+    case 'add-deck': { const d=DECKS[+t.dataset.i]; const n=addDeck(d); viewState.deck=d.name; render(); toast(`${n} cards added to "${d.name}"`); break; }
+    case 'add-all-decks': { const n=DECKS.reduce((s,d)=>s+addDeck(d),0); toast(`${n} cards added`); break; }
+    case 'clear-code': e.preventDefault(); lsSet(CODE_KEY,''); render(); break;
     case 'exam-cheat': viewState.cheat=t.dataset.id; viewState.cheatY=window.scrollY; render(); window.scrollTo(0,0); break;
     case 'cheat-close': { const y=viewState.cheatY||0; viewState.cheat=null; render(); window.scrollTo(0,y); break; }
     case 'exam-cards': { const r=viewState.exam, ex=examById(r.id); const miss=examMissed(r); miss.forEach(i=>put({kind:'card',deck:ex.course+' exam',front:ex.qs[i].q,back:ex.qs[i].a,box:1,next:todayISO()})); toast(`${miss.length} cards added to "${ex.course} exam"`); break; }
@@ -1295,6 +1476,7 @@ document.addEventListener('submit', e => {
     if (left && !viewState.examConfirm){ viewState.examConfirm=true; toast(`${left} question${left===1?'':'s'} still blank. Press Submit again to hand it in anyway.`); const first=r.idx.find(i=>!hasAns(r,i)); document.getElementById('q-'+first)?.scrollIntoView({behavior:'smooth',block:'center'}); return; }
     viewState.examConfirm=false; r.submitted=true; if(r.mode==='mc') examSave(); lsSet(EXAM_KEY,null); render(); window.scrollTo(0,0); return;
   }
+  if (f==='code-form'){ const c=$('#class-code').value.trim(); if(c){ lsSet(CODE_KEY,c); toast('AI unlocked on this device'); render(); } }
   if (f==='log-form'){ put({kind:'log', date:todayISO(), minutes:+$('#log-min').value, course:''}); toast('Time logged'); }
 });
 ['dragover','dragleave','drop'].forEach(ev => document.addEventListener(ev, e => {
